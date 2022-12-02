@@ -1,0 +1,6 @@
+
+./interface/server/node_modules
+./interface/DS_Store
+./interface/server/DS_Store
+.DS_Store
+node_modules
