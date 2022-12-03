@@ -1,160 +1,180 @@
 import "./Draw.css";
 import "bootstrap/dist/css/bootstrap.css";
+import { useEffect, useRef, useState } from "react";
 import Button from "react-bootstrap/Button";
 import Dropdown from "react-bootstrap/Dropdown";
 import ProgressBar from "react-bootstrap/ProgressBar";
-import { useEffect, useState } from "react";
+import { Warning } from "./Warning";
 
-export function DrawingPane() {
+export function DrawingPane(props) {
+  // STATE VARIABLES
+
   const [selectedMode, setSelectedMode] = useState("Select Mode");
-  const [displayDrawingProgressBar, setDisplayDrawingProgressBar] =
-    useState(false);
-  const [displayStoppingProgressBar, setDisplayStoppingProgressBar] =
-    useState(false);
+  const [resetProgressBar, setResetProgressBar] = useState(false);
+  const [drawProgressBar, setDrawProgressBar] = useState(false);
+  const [showShakeWarning, setShowShakeWarning] = useState(false);
 
-  var canvas;
+  // CANVAS GLOBAL VARIABLES
 
-  var canvasPoints = {
-    clickX: [0],
-    clickY: [0],
-    paint: false,
-    drawPoints: function (cvs) {
-      //cvs = document.getElementById('theCanvas');
-      var ctx = cvs.getContext("2d");
-      ctx.clearRect(0, 0, cvs.width, cvs.height);
-      ctx.strokeStyle = "black";
-      ctx.beginPath();
-      ctx.moveTo(this.clickX[0], this.clickY[0]);
-      for (var i = 0; i < this.clickX.length; i++) {
-        ctx.lineTo(this.clickX[i], this.clickY[i]);
-        ctx.moveTo(this.clickX[i], this.clickY[i]);
-      }
-      ctx.stroke();
-      ctx.closePath();
-    },
-    // Only add new point if it differs from the last one
-    addPoint: function (x, y) {
-      if (
-        x != this.clickX[this.nPoints() - 1] ||
-        y != this.clickY[this.nPoints() - 1]
-      ) {
-        this.clickX.push(x);
-        this.clickY.push(y);
-      }
-    },
-    clearPoints: function () {
-      this.clickX = [0];
-      this.clickY = [0];
-      this.paint = false;
-    },
-    nPoints: function () {
-      return this.clickX.length;
-    },
-    popPoint: function () {
-      return [this.clickX.pop(), this.clickY.pop()];
-    },
-    reset: function () {
-      this.clickX = [0];
-      this.clickY = [0];
-    },
-    setPaint: function (p) {
-      this.paint = p;
-    },
+  const canvas = useRef(null);
+  class CanvasPoint {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+    }
+  }
+  var canvasPoints = [new CanvasPoint(0, 0)];
+  var canvasDrawing = false;
+
+  // ARDUINO GLOBAL VARIABLES
+
+  var arduinoInstructions = [];
+
+  // CANVAS UTILITY FUNCTIONS
+
+  const drawPointsContiguous = () => {
+    const ctx = canvas.current.getContext("2d");
+    ctx.strokeStyle = "black";
+    ctx.clearRect(0, 0, canvas.current.width, canvas.current.height);
+    ctx.beginPath();
+    ctx.moveTo(canvasPoints[0].x, canvasPoints[0].y);
+    for (var i = 0; i < canvasPoints.length; i++) {
+      ctx.lineTo(canvasPoints[i].x, canvasPoints[i].y);
+      ctx.moveTo(canvasPoints[i].x, canvasPoints[i].y);
+    }
+    ctx.stroke();
+    ctx.closePath();
+  };
+
+  const addNewPoint = (x, y) => {
+    if (
+      x !== canvasPoints[canvasPoints.length - 1].x ||
+      y !== canvasPoints[canvasPoints.length - 1].y
+    ) {
+      canvasPoints.push(new CanvasPoint(x, y));
+    }
+  };
+
+  const popPoint = () => {
+    canvasPoints.pop();
+  };
+
+  const clearAllPoints = () => {
+    canvasPoints = [new CanvasPoint(0, 0)];
+  };
+
+  // CANVAS EVENT HANDLERS
+
+  const onCanvasMouseDown = () => {
+    canvasDrawing = true;
+    drawPointsContiguous();
+  };
+
+  const onCanvasMouseUp = () => {
+    canvasDrawing = false;
+    drawPointsContiguous();
+  };
+
+  const onCanvasMouseClick = (e) => {
+    addNewPoint(
+      e.pageX - canvas.current.offsetLeft,
+      e.pageY - canvas.current.offsetTop
+    );
+    drawPointsContiguous();
+  };
+
+  const onCanvasMouseMove = (e) => {
+    if (canvasDrawing) {
+      addNewPoint(
+        e.pageX - canvas.current.offsetLeft,
+        e.pageY - canvas.current.offsetTop
+      );
+      drawPointsContiguous();
+    }
+  };
+
+  const onCanvasMouseLeave = () => {
+    canvasDrawing = false;
+    drawPointsContiguous();
+  };
+
+  const onClickErase = () => {
+    canvasDrawing = false;
+    clearAllPoints();
+    drawPointsContiguous();
+  };
+
+  const onClickEraseLast = () => {
+    if (canvasPoints.length > 1) {
+      popPoint();
+      drawPointsContiguous();
+    }
+  };
+
+  // GENERAL UTILITY FUNCTIONS
+
+  const startDrawing = () => {
+    startReset();
+    // SRC: S - Server, RI - Reset Instruction
+    props.socket.send("SRI");
+    // disable all buttons
+  };
+
+  const startReset = () => {
+    setResetProgressBar(true);
+  };
+
+  const shakeWarning = () => {
+    setShowShakeWarning(true);
   };
 
   useEffect(() => {
-    canvas = document.getElementById("canvas");
-    canvas.addEventListener("click", onCanvasMouseClick(canvasPoints));
-    canvas.addEventListener("mousedown", onCanvasMouseDown(canvasPoints));
-    canvas.addEventListener("mouseup", onCanvasMouseUp(canvasPoints));
-    canvas.addEventListener("mousemove", onCanvasMouseMove(canvasPoints));
-    canvas.addEventListener("mouseleave", onCanvasMouseLeave(canvasPoints));
-    document
-      .getElementById("eraseLast")
-      .addEventListener("click", onClickEraseLast(canvas, canvasPoints));
-    document
-      .getElementById("erase")
-      .addEventListener("click", onClickErase(canvas, canvasPoints));
-  }, []);
+    if (props.resetProgress === 100) {
+      setResetProgressBar(false);
+      shakeWarning();
+    }
+  }, [props.resetProgress]);
 
-  // Canvas drawing functions
-
-  // Scope preserving wrapper for canvas callback function
-  const onCanvasMouseClick = (canvasPoints) => {
-    return function (e) {
-      canvasPoints.addPoint(
-        e.pageX - this.offsetLeft,
-        e.pageY - this.offsetTop
-      );
-      canvasPoints.drawPoints(this);
-    };
+  const confirmShakeWarning = () => {
+    setShowShakeWarning(false);
+    reallyStartDrawing();
   };
 
-  // Scope preserving wrapper for canvas callback function
-  const onCanvasMouseDown = (canvasPoints) => {
-    return function (e) {
-      canvasPoints.setPaint(true);
-      canvasPoints.drawPoints(this);
-    };
-  };
-
-  // Scope preserving wrapper for canvas callback function
-  const onCanvasMouseUp = (canvasPoints) => {
-    return function (e) {
-      canvasPoints.setPaint(false);
-      canvasPoints.drawPoints(this);
-    };
-  };
-
-  // Scope preserving wrapper for canvas callback function
-  const onCanvasMouseMove = (canvasPoints) => {
-    return function (e) {
-      if (canvasPoints.paint) {
-        canvasPoints.addPoint(
-          e.pageX - this.offsetLeft,
-          e.pageY - this.offsetTop
-        );
-        canvasPoints.drawPoints(this);
-      }
-    };
-  };
-
-  // Scope preserving wrapper for canvas callback function
-  const onCanvasMouseLeave = (canvasPoints) => {
-    return function (e) {
-      canvasPoints.setPaint(false);
-    };
-  };
-
-  // Scope preserving wrapper for canvas callback functions
-  const onClickErase = (canvas, canvasPoints) => {
-    return function (e) {
-      canvasPoints.reset();
-      canvasPoints.setPaint(false);
-      canvasPoints.drawPoints(canvas);
-    };
-  };
-
-  const onClickEraseLast = (canvas, canvasPoints) => {
-    return function (e) {
-      if (canvasPoints.nPoints() > 1) {
-        canvasPoints.popPoint();
-        canvasPoints.drawPoints(canvas);
-      }
-    };
-  };
-
-  const startDrawing = () => {
-    setDisplayDrawingProgressBar(true);
+  const reallyStartDrawing = () => {
+    setDrawProgressBar(true);
+    translateToArduino();
+    var instruction;
+    for (instruction in arduinoInstructions) {
+      props.socket.write(instruction);
+    }
   };
 
   const stopDrawing = () => {
-    setDisplayDrawingProgressBar(false);
-    setDisplayStoppingProgressBar(true);
+    setDrawProgressBar(false);
+    // enable all buttons again
+  };
+
+  // TRANSLATE TO ARDUINO INSTRUCTIONS
+
+  const translateToArduino = () => {
+    arduinoInstructions = [];
+    for (var i = 0; i < canvasPoints.length; i++) {
+      arduinoInstructions.push(
+        "LXY" +
+          " " +
+          Math.round(canvasPoints[i].x) +
+          " " +
+          Math.round(canvasPoints[i].y)
+      );
+    }
   };
 
   return (
     <div className="main-container">
+      <Warning
+        show={showShakeWarning}
+        onHide={() => confirmShakeWarning()}
+      ></Warning>
       <div className="header">
         <Dropdown>
           <Dropdown.Toggle variant="outline-info" id="dropdown-basic">
@@ -179,10 +199,18 @@ export function DrawingPane() {
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
-        <Button variant="outline-warning" id="eraseLast">
+        <Button
+          variant="outline-warning"
+          id="eraseLast"
+          onClick={() => onClickEraseLast()}
+        >
           Erase Last Stroke
         </Button>
-        <Button variant="outline-danger" id="erase">
+        <Button
+          variant="outline-danger"
+          id="erase"
+          onClick={() => onClickErase()}
+        >
           Erase Entire Canvas
         </Button>
       </div>
@@ -192,29 +220,35 @@ export function DrawingPane() {
           width="600px"
           height="400px"
           className="canvas-pane"
+          ref={canvas}
+          onClick={(e) => onCanvasMouseClick(e)}
+          onMouseMove={(e) => onCanvasMouseMove(e)}
+          onMouseUp={() => onCanvasMouseUp()}
+          onMouseDown={() => onCanvasMouseDown()}
+          onMouseLeave={() => onCanvasMouseLeave()}
         ></canvas>
         <div className="progress-bar-container">
-          {displayDrawingProgressBar ? "Drawing Progress: " : ""}
-          {displayDrawingProgressBar ? (
+          {resetProgressBar ? "Reset Progress: " : ""}
+          {resetProgressBar ? (
+            <ProgressBar
+              striped
+              variant="warning"
+              animated
+              now={props.resetProgress}
+              style={{ height: "30px" }}
+            />
+          ) : null}
+          {drawProgressBar ? "Drawing Progress: " : ""}
+          {drawProgressBar ? (
             <ProgressBar
               striped
               variant="success"
               animated
-              now={45}
+              now={props.drawProgress}
               style={{ height: "30px" }}
             />
           ) : null}
           <br></br>
-          {displayStoppingProgressBar ? "Stopping Progress: " : ""}
-          {displayStoppingProgressBar ? (
-            <ProgressBar
-              striped
-              variant="danger"
-              animated
-              now={45}
-              style={{ height: "30px" }}
-            />
-          ) : null}
         </div>
       </div>
       <div className="footer">
