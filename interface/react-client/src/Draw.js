@@ -9,10 +9,11 @@ import { Warning } from "./Warning";
 export function DrawingPane(props) {
   // STATE VARIABLES
 
-  const [selectedMode, setSelectedMode] = useState("Select Mode");
+  const [selectedMode, setSelectedMode] = useState("Draw");
   const [resetProgressBar, setResetProgressBar] = useState(false);
   const [drawProgressBar, setDrawProgressBar] = useState(false);
   const [showShakeWarning, setShowShakeWarning] = useState(false);
+  const [canInteract, setCanInteract] = useState(true);
 
   // CANVAS GLOBAL VARIABLES
 
@@ -33,6 +34,7 @@ export function DrawingPane(props) {
   // CANVAS UTILITY FUNCTIONS
 
   const drawPointsContiguous = () => {
+    console.log(canvasPoints.length);
     const ctx = canvas.current.getContext("2d");
     ctx.strokeStyle = "black";
     ctx.clearRect(0, 0, canvas.current.width, canvas.current.height);
@@ -66,25 +68,21 @@ export function DrawingPane(props) {
   // CANVAS EVENT HANDLERS
 
   const onCanvasMouseDown = () => {
-    canvasDrawing = true;
-    drawPointsContiguous();
+    if (canInteract) {
+      canvasDrawing = true;
+      drawPointsContiguous();
+    }
   };
 
   const onCanvasMouseUp = () => {
-    canvasDrawing = false;
-    drawPointsContiguous();
+    if (canInteract) {
+      canvasDrawing = false;
+      drawPointsContiguous();
+    }
   };
 
   const onCanvasMouseClick = (e) => {
-    addNewPoint(
-      e.pageX - canvas.current.offsetLeft,
-      e.pageY - canvas.current.offsetTop
-    );
-    drawPointsContiguous();
-  };
-
-  const onCanvasMouseMove = (e) => {
-    if (canvasDrawing) {
+    if (canInteract) {
       addNewPoint(
         e.pageX - canvas.current.offsetLeft,
         e.pageY - canvas.current.offsetTop
@@ -93,9 +91,23 @@ export function DrawingPane(props) {
     }
   };
 
+  const onCanvasMouseMove = (e) => {
+    if (canInteract) {
+      if (canvasDrawing) {
+        addNewPoint(
+          e.pageX - canvas.current.offsetLeft,
+          e.pageY - canvas.current.offsetTop
+        );
+        drawPointsContiguous();
+      }
+    }
+  };
+
   const onCanvasMouseLeave = () => {
-    canvasDrawing = false;
-    drawPointsContiguous();
+    if (canInteract) {
+      canvasDrawing = false;
+      drawPointsContiguous();
+    }
   };
 
   const onClickErase = () => {
@@ -115,9 +127,9 @@ export function DrawingPane(props) {
 
   const startDrawing = () => {
     startReset();
-    // SRC: S - Server, RI - Reset Instruction
-    props.socket.send("SRI");
-    // disable all buttons
+    // SR: S - Server, R - Reset Instruction
+    props.socket.send("SR");
+    setCanInteract(false);
   };
 
   const startReset = () => {
@@ -137,6 +149,8 @@ export function DrawingPane(props) {
 
   const confirmShakeWarning = () => {
     setShowShakeWarning(false);
+    // SD: S - Server, D - Draw Instruction
+    props.socket.send("SD");
     reallyStartDrawing();
   };
 
@@ -151,7 +165,7 @@ export function DrawingPane(props) {
 
   const stopDrawing = () => {
     setDrawProgressBar(false);
-    // enable all buttons again
+    setCanInteract(true);
   };
 
   // TRANSLATE TO ARDUINO INSTRUCTIONS
@@ -159,8 +173,9 @@ export function DrawingPane(props) {
   const translateToArduino = () => {
     arduinoInstructions = [];
     for (var i = 0; i < canvasPoints.length; i++) {
+      // SL: S - Server, L - Line Instruction
       arduinoInstructions.push(
-        "LXY" +
+        "SL" +
           " " +
           Math.round(canvasPoints[i].x) +
           " " +
@@ -177,7 +192,11 @@ export function DrawingPane(props) {
       ></Warning>
       <div className="header">
         <Dropdown>
-          <Dropdown.Toggle variant="outline-info" id="dropdown-basic">
+          <Dropdown.Toggle
+            variant="outline-info"
+            id="dropdown-basic"
+            disabled={!canInteract}
+          >
             {selectedMode}
           </Dropdown.Toggle>
           <Dropdown.Menu>
@@ -203,6 +222,7 @@ export function DrawingPane(props) {
           variant="outline-warning"
           id="eraseLast"
           onClick={() => onClickEraseLast()}
+          disabled={!canInteract}
         >
           Erase Last Stroke
         </Button>
@@ -210,6 +230,7 @@ export function DrawingPane(props) {
           variant="outline-danger"
           id="erase"
           onClick={() => onClickErase()}
+          disabled={!canInteract}
         >
           Erase Entire Canvas
         </Button>
@@ -226,9 +247,16 @@ export function DrawingPane(props) {
           onMouseUp={() => onCanvasMouseUp()}
           onMouseDown={() => onCanvasMouseDown()}
           onMouseLeave={() => onCanvasMouseLeave()}
+          style={
+            canInteract
+              ? { backgroundColor: "white" }
+              : { backgroundColor: "#f0f0f0" }
+          }
         ></canvas>
         <div className="progress-bar-container">
-          {resetProgressBar ? "Reset Progress: " : ""}
+          <span style={{ marginBottom: "10px" }}>
+            {resetProgressBar ? "Reset Progress: " : ""}
+          </span>
           {resetProgressBar ? (
             <ProgressBar
               striped
@@ -238,7 +266,9 @@ export function DrawingPane(props) {
               style={{ height: "30px" }}
             />
           ) : null}
-          {drawProgressBar ? "Drawing Progress: " : ""}
+          <span style={{ marginBottom: "10px" }}>
+            {drawProgressBar ? "Drawing Progress: " : ""}
+          </span>
           {drawProgressBar ? (
             <ProgressBar
               striped
@@ -252,10 +282,18 @@ export function DrawingPane(props) {
         </div>
       </div>
       <div className="footer">
-        <Button variant="outline-success" onClick={() => startDrawing()}>
+        <Button
+          variant="outline-success"
+          onClick={() => startDrawing()}
+          disabled={!canInteract}
+        >
           Start Drawing
         </Button>
-        <Button variant="outline-danger" onClick={() => stopDrawing()}>
+        <Button
+          variant="outline-danger"
+          onClick={() => stopDrawing()}
+          disabled={canInteract}
+        >
           Stop Drawing
         </Button>
       </div>
