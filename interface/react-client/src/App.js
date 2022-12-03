@@ -20,8 +20,6 @@ function App() {
 
   function showData(message) {
     let parsedMessage = JSON.parse(message.data); // messages are JSON, parse
-    // console.log(parseInt(parsedMessage));
-    // setResetProgess(parseInt(parsedMessage) * 5);
     switch (parsedMessage[0]) {
       // AR: A - Arduino, RP - Reset Progress
       case "ARP":
