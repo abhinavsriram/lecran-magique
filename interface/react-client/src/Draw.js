@@ -34,7 +34,6 @@ export function DrawingPane(props) {
   // CANVAS UTILITY FUNCTIONS
 
   const drawPointsContiguous = () => {
-    console.log(canvasPoints.length);
     const ctx = canvas.current.getContext("2d");
     ctx.strokeStyle = "black";
     ctx.clearRect(0, 0, canvas.current.width, canvas.current.height);

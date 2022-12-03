@@ -19,18 +19,18 @@ function App() {
   }
 
   function showData(message) {
-    // let parsedMessage = JSON.parse(message.data); // messages are JSON, parse
+    let parsedMessage = JSON.parse(message.data); // messages are JSON, parse
     // setResetProgess(parseInt(parsedMessage) * 5); // for testing
-    // switch (parsedMessage[0]) {
-    //   // AR: A - Arduino, R - Reset Progress
-    //   case "AR":
-    //     setResetProgess(parsedMessage[1]);
-    //     break;
-    //   // AD: A - Arduino, D - Draw Progress
-    //   case "AD":
-    //     setDrawProgess(parsedMessage[1]);
-    //     break;
-    // }
+    switch (parsedMessage[0]) {
+      // AR: A - Arduino, R - Reset Progress
+      case "AR":
+        setResetProgess(parsedMessage[1]);
+        break;
+      // AD: A - Arduino, D - Draw Progress
+      case "AD":
+        setDrawProgess(parsedMessage[1]);
+        break;
+    }
   }
 
   useEffect(() => {
