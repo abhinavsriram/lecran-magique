@@ -32,7 +32,7 @@ void loop() {
         int yCoord = currLine.substring(spaceDelim2 + 1).toInt();
         totalLinesProcessed += 1;
         // this will be in another function call...
-        Serial.println("AD " + totalLinesProcessed);
+        Serial.println("AD " + String(totalLinesProcessed));
         break;
       }
       case 'R':
@@ -42,7 +42,7 @@ void loop() {
           digitalWrite(6, LOW);
           delay (1000);
           // this will be in another function call...
-          Serial.println("AR " + i);
+          Serial.println("AR " + String(i));
         }
         break;
       default:

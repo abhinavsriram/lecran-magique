@@ -19,7 +19,7 @@ function App() {
   }
 
   function showData(message) {
-    let parsedMessage = JSON.parse(message.data); // messages are JSON, parse
+    let parsedMessage = String(message.data); // messages are JSON, parse
     // setResetProgess(parseInt(parsedMessage) * 5); // for testing
     switch (parsedMessage[0]) {
       // AR: A - Arduino, R - Reset Progress
@@ -29,6 +29,8 @@ function App() {
       // AD: A - Arduino, D - Draw Progress
       case "AD":
         setDrawProgess(parsedMessage[1]);
+        break;
+      default:
         break;
     }
   }
