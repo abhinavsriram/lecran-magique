@@ -1,0 +1,38 @@
+.main-container {
+  padding: 50px;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 500px;
+  margin-bottom: 50px;
+}
+
+.canvas-container {
+  margin-bottom: 50px;
+  display: flex;
+  flex-direction: row;
+}
+
+.canvas-pane {
+  border: 1px solid gray;
+  border-radius: 5px;
+  margin: 5px;
+  float: left;
+}
+
+.footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 270px;
+}
+
+.progress-bar-container {
+  margin-bottom: 50px;
+  width: 600px;
+  height: 30px;
+  padding: 20px;
+}
