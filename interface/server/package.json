@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "serialport": "^9.0.3"
+    "serialport": "^9.0.3",
+    "ws": "^8.11.0"
   }
 }
