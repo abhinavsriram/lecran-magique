@@ -6,6 +6,16 @@ import Dropdown from "react-bootstrap/Dropdown";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { Warning } from "./Warning";
 
+class CanvasPoint {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+}
+var canvasPoints = [new CanvasPoint(0, 0)];
+var canvasDrawing = false;
+var arduinoInstructions = [];
+
 export function DrawingPane(props) {
   // STATE VARIABLES
 
@@ -18,18 +28,18 @@ export function DrawingPane(props) {
   // CANVAS GLOBAL VARIABLES
 
   const canvas = useRef(null);
-  class CanvasPoint {
-    constructor(x, y) {
-      this.x = x;
-      this.y = y;
-    }
-  }
-  var canvasPoints = [new CanvasPoint(0, 0)];
-  var canvasDrawing = false;
+  // class CanvasPoint {
+  //   constructor(x, y) {
+  //     this.x = x;
+  //     this.y = y;
+  //   }
+  // }
+  // var canvasPoints = [new CanvasPoint(0, 0)];
+  // var canvasDrawing = false;
 
   // ARDUINO GLOBAL VARIABLES
 
-  var arduinoInstructions = [];
+  // var arduinoInstructions = [];
 
   // CANVAS UTILITY FUNCTIONS
 
@@ -156,9 +166,11 @@ export function DrawingPane(props) {
   const reallyStartDrawing = () => {
     setDrawProgressBar(true);
     translateToArduino();
-    var instruction;
-    for (instruction in arduinoInstructions) {
-      props.socket.write(instruction);
+    // var instruction;
+    console.log(arduinoInstructions.length);
+    for (var i = 0; i < arduinoInstructions.length; i++) {
+      console.log(arduinoInstructions[i]);
+      props.socket.send(arduinoInstructions[i]);
     }
   };
 
@@ -171,14 +183,15 @@ export function DrawingPane(props) {
 
   const translateToArduino = () => {
     arduinoInstructions = [];
+    console.log(canvasPoints.length);
     for (var i = 0; i < canvasPoints.length; i++) {
       // SL: S - Server, L - Line Instruction
       arduinoInstructions.push(
         "SL" +
-          " " +
-          Math.round(canvasPoints[i].x) +
-          " " +
-          Math.round(canvasPoints[i].y)
+        " " +
+        Math.round(canvasPoints[i].x) +
+        " " +
+        Math.round(canvasPoints[i].y)
       );
     }
   };

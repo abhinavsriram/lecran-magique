@@ -1,6 +1,7 @@
 int totalLinesProcessed = 0;
 
 void setup() {
+  pinMode(6, OUTPUT);
   Serial.begin(9600);
 }
 
@@ -36,13 +37,13 @@ void loop() {
         break;
       }
       case 'R':
-        for (int i = 0; i < 10; i++) {
+        for (int i = 1; i <= 10; i++) {
           digitalWrite(6, HIGH);
           delay(1000);
           digitalWrite(6, LOW);
           delay (1000);
           // this will be in another function call...
-          Serial.println("AR " + String(i));
+          Serial.println("AR " + String(i * 10));
         }
         break;
       default:
