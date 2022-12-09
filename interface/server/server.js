@@ -1,5 +1,6 @@
 const SerialPort = require("serialport");
 const WebSocketServer = require("ws").Server;
+const Spawn = require("child_process").spawn;
 
 // SERIAL COMMUNICATION
 
@@ -20,7 +21,7 @@ function setupSerialConnection(portName, baudRate) {
 
 function configureSerialConnection(parser) {
   sp.on("open", showOnPortOpen); // call showOnPortOpen when port opens
-  parser.on("data", readSerialData); // call readSerialData while port is open
+  parser.on("data", readFromSerial); // call readFromSerial while port is open
   sp.on("close", showOnPortClose); // call showOnPortClose when port closes
   sp.on("error", showOnError); // call showOnError when there is any error
 }
@@ -29,7 +30,8 @@ function showOnPortOpen() {
   console.log("SERVER UPDATE: Serial Port (" + sp.path + ") Open.");
 }
 
-function readSerialData(data) {
+// read from Arduino
+function readFromSerial(data) {
   console.log(
     "SERVER UPDATE: Data Received From Arduino (via " + sp.path + "): " + data
   );
@@ -37,7 +39,15 @@ function readSerialData(data) {
     console.log(
       "SERVER UPDATE: Broadcasting Data To All Websocket Connections."
     );
-    broadcastData(data); // broadcast data to all websocket connections
+    broadcastToClient(data); // broadcast data to all websocket connections
+  }
+}
+
+// send to Client
+function broadcastToClient(data) {
+  var connection;
+  for (connection in connections) {
+    connections[connection].send(data); // send the data to each connection
   }
 }
 
@@ -61,30 +71,57 @@ function configureWebSocketServer() {
   wss.on("connection", handleConnection); // upon establishin a connection, call handleConnection
 }
 
-function sendToSerial(data) {
-  console.log(
-    "SERVER UPDATE: Sending Data To Arduino (via " + sp.path + "): " + data
-  );
+// read from Client
+function readFromWebSocket(data) {
+  // instructions ("SR, SD, SL") from Client meant for the Arduino
+  if (String(data)[0] === "S") {
+    console.log(
+      "SERVER UPDATE: Sending Data To Arduino (via " + sp.path + "): " + data
+    );
+    broadcastToArduino(data);
+  }
+  // instruction ("PY") from Client meant to run Python script
+  if (String(data)[0] === "P") {
+    let parsedData = String(data).split(" ");
+    // call on broadcastToClient(data) where data = VI <url of vector image>
+    const pythonProcess = Spawn("python3", [
+      "../../vectorize/master.py",
+      parsedData[1], // link to original image
+    ]);
+    var coordinates = "";
+    var file = "";
+    pythonProcess.stdout.on("data", (data) => {
+      if (String(data).length === 6) {
+        file = String(data);
+      } else {
+        coordinates = coordinates.concat(String(data));
+      }
+    });
+    setTimeout(() => {
+      broadcastToClient("IR " + file);
+      const coordinateRowArray = coordinates.split(";");
+      for (var i = 0; i < coordinateRowArray.length; i++) {
+        broadcastToClient("IP " + coordinateRowArray[i]);
+      }
+    }, 5000);
+  }
+}
+
+// send to Arduino
+function broadcastToArduino(data) {
   sp.write(data);
 }
 
 function handleConnection(client) {
   console.log("SERVER UPDATE: Client Connection Established."); // we have a new client
   connections.push(client); // add this client to the connections array
-  client.on("message", sendToSerial); // when a client sends a message
+  client.on("message", readFromWebSocket); // when a client sends a message
   client.on("close", function () {
     // when a client closes its connection
     console.log("SERVER UPDATE: Client Connection Closed."); // print it out
     let position = connections.indexOf(client); // get the client's position in the array
     connections.splice(position, 1); // and delete it from the array
   });
-}
-
-function broadcastData(data) {
-  var connection;
-  for (connection in connections) {
-    connections[connection].send(data); // send the data to each connection
-  }
 }
 
 // MAIN METHOD

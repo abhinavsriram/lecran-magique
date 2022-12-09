@@ -11,18 +11,15 @@ export function Warning(props) {
     >
       <Modal.Header closeButton>
         <Modal.Title id="contained-modal-title-vcenter">
-          Clear The Etch A Sketch
+          {props.title}
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p>
-          Shake the Etch A Sketch to clear the screen and hit confirm once you
-          have done this and placed the Etch A Sketch back on a flat surface.
-        </p>
+        <p>{props.body}</p>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="outline-success" onClick={props.onHide}>
-          Confirm
+          {props.button}
         </Button>
       </Modal.Footer>
     </Modal>

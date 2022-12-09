@@ -1,10 +1,18 @@
 import "./Draw.css";
 import "bootstrap/dist/css/bootstrap.css";
 import { useEffect, useRef, useState } from "react";
+import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Dropdown from "react-bootstrap/Dropdown";
 import ProgressBar from "react-bootstrap/ProgressBar";
 import { Warning } from "./Warning";
+
+import { Configuration, OpenAIApi } from "openai";
+const OPENAI_API_KEY = "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";
+const configuration = new Configuration({
+  apiKey: OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
 class CanvasPoint {
   constructor(x, y) {
@@ -17,32 +25,21 @@ var canvasDrawing = false;
 var arduinoInstructions = [];
 
 export function DrawingPane(props) {
-  // STATE VARIABLES
-
+  // STATE VARIABLES FOR DEFAULT
   const [selectedMode, setSelectedMode] = useState("Draw");
   const [resetProgressBar, setResetProgressBar] = useState(false);
   const [drawProgressBar, setDrawProgressBar] = useState(false);
   const [showShakeWarning, setShowShakeWarning] = useState(false);
   const [canInteract, setCanInteract] = useState(true);
-
-  // CANVAS GLOBAL VARIABLES
-
+  const [canStart, setCanStart] = useState(true);
+  const [canStop, setCanStop] = useState(false);
   const canvas = useRef(null);
-  // class CanvasPoint {
-  //   constructor(x, y) {
-  //     this.x = x;
-  //     this.y = y;
-  //   }
-  // }
-  // var canvasPoints = [new CanvasPoint(0, 0)];
-  // var canvasDrawing = false;
 
-  // ARDUINO GLOBAL VARIABLES
-
-  // var arduinoInstructions = [];
+  // STATE VARIABLES FOR CAPSTONE
+  const [prompt, setPrompt] = useState("");
+  const [showPromptWarning, setShowPromptWarning] = useState(false);
 
   // CANVAS UTILITY FUNCTIONS
-
   const drawPointsContiguous = () => {
     const ctx = canvas.current.getContext("2d");
     ctx.strokeStyle = "black";
@@ -75,7 +72,6 @@ export function DrawingPane(props) {
   };
 
   // CANVAS EVENT HANDLERS
-
   const onCanvasMouseDown = () => {
     if (canInteract) {
       canvasDrawing = true;
@@ -133,12 +129,13 @@ export function DrawingPane(props) {
   };
 
   // GENERAL UTILITY FUNCTIONS
-
   const startDrawing = () => {
     startReset();
     // SR: S - Server, R - Reset Instruction
     props.socket.send("SR");
     setCanInteract(false);
+    setCanStart(false);
+    setCanStop(false);
   };
 
   const startReset = () => {
@@ -158,6 +155,7 @@ export function DrawingPane(props) {
 
   const confirmShakeWarning = () => {
     setShowShakeWarning(false);
+    setCanStop(true);
     // SD: S - Server, D - Draw Instruction
     props.socket.send("SD");
     reallyStartDrawing();
@@ -166,10 +164,7 @@ export function DrawingPane(props) {
   const reallyStartDrawing = () => {
     setDrawProgressBar(true);
     translateToArduino();
-    // var instruction;
-    console.log(arduinoInstructions.length);
     for (var i = 0; i < arduinoInstructions.length; i++) {
-      console.log(arduinoInstructions[i]);
       props.socket.send(arduinoInstructions[i]);
     }
   };
@@ -177,28 +172,93 @@ export function DrawingPane(props) {
   const stopDrawing = () => {
     setDrawProgressBar(false);
     setCanInteract(true);
+    setCanStart(true);
+    clearAllPoints();
   };
 
   // TRANSLATE TO ARDUINO INSTRUCTIONS
-
   const translateToArduino = () => {
     arduinoInstructions = [];
-    console.log(canvasPoints.length);
-    for (var i = 0; i < canvasPoints.length; i++) {
-      // SL: S - Server, L - Line Instruction
-      arduinoInstructions.push(
-        "SL" +
-        " " +
-        Math.round(canvasPoints[i].x) +
-        " " +
-        Math.round(canvasPoints[i].y)
-      );
+    if (selectedMode === "Draw") {
+      for (var i = 0; i < canvasPoints.length; i++) {
+        // SL: S - Server, L - Line Instruction
+        arduinoInstructions.push(
+          "SL" +
+            " " +
+            Math.round(canvasPoints[i].x * 0.5) +
+            " " +
+            Math.round(canvasPoints[i].y * 0.5)
+        );
+      }
+    } else if (selectedMode === "Print") {
+      for (var i = 0; i < props.imagePoints.length; i++) {
+        // SL: S - Server, L - Line Instruction
+        arduinoInstructions.push(
+          "SL" +
+            " " +
+            Math.round(props.imagePoints[i][0]) +
+            " " +
+            Math.round(props.imagePoints[i][1])
+        );
+      }
     }
   };
+
+  // CAPSTONE FEATURE FUNCTIONS
+  const getImageFromOpenAI = async (prompt) => {
+    if (prompt === "" || prompt.length < 30) {
+      setShowPromptWarning(true);
+    } else {
+      // try {
+      //   const response = await openai.createImage({
+      //     prompt: prompt,
+      //     n: 1,
+      //     size: "256x256",
+      //   });
+      //   const image_url = response.data.data[0].url;
+      //   console.log(image_url);
+      // } catch (error) {
+      //   if (error.response) {
+      //     console.log(error.response.status);
+      //     console.log(error.response.data);
+      //   } else {
+      //     console.log(error.message);
+      //   }
+      // }
+      const image_url = "https://picsum.photos/256/256";
+      // everything after this must be called in a callback once openai responds
+      // run python script to get vector image
+      props.socket.send("PY " + image_url);
+    }
+  };
+
+  const confirmPromptWarning = () => {
+    setShowPromptWarning(false);
+  };
+
+  useEffect(() => {
+    if (props.originalImage !== "" && props.vectorImage !== "") {
+      setCanStart(true);
+    }
+  }, [props.originalImage, props.vectorImage, props.imagePoints]);
 
   return (
     <div className="main-container">
       <Warning
+        title={"Enter a Prompt"}
+        body={
+          "Enter a descriptive (at least 40 character) prompt for DALL·E to produce something interesting."
+        }
+        button={"Okay"}
+        show={showPromptWarning}
+        onHide={() => confirmPromptWarning()}
+      ></Warning>
+      <Warning
+        title={"Clear The Etch A Sketch"}
+        body={
+          "Shake the Etch A Sketch to clear the screen and hit confirm once you have done this and placed the Etch A Sketch back on a flat surface."
+        }
+        button={"Confirm"}
         show={showShakeWarning}
         onHide={() => confirmShakeWarning()}
       ></Warning>
@@ -215,6 +275,7 @@ export function DrawingPane(props) {
             <Dropdown.Item
               href="#/action-1"
               onClick={() => {
+                setCanStart(true);
                 setSelectedMode("Draw");
               }}
             >
@@ -223,6 +284,7 @@ export function DrawingPane(props) {
             <Dropdown.Item
               href="#/action-2"
               onClick={() => {
+                setCanStart(false);
                 setSelectedMode("Print");
               }}
             >
@@ -230,81 +292,131 @@ export function DrawingPane(props) {
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
-        <Button
-          variant="outline-warning"
-          id="eraseLast"
-          onClick={() => onClickEraseLast()}
-          disabled={!canInteract}
-        >
-          Erase Last Stroke
-        </Button>
-        <Button
-          variant="outline-danger"
-          id="erase"
-          onClick={() => onClickErase()}
-          disabled={!canInteract}
-        >
-          Erase Entire Canvas
-        </Button>
+        {selectedMode === "Draw" ? (
+          <Button
+            variant="outline-warning"
+            id="eraseLast"
+            onClick={() => onClickEraseLast()}
+            disabled={!canInteract}
+          >
+            Erase Last Stroke
+          </Button>
+        ) : null}
+        {selectedMode === "Draw" ? (
+          <Button
+            variant="outline-danger"
+            id="erase"
+            onClick={() => onClickErase()}
+            disabled={!canInteract}
+          >
+            Erase Entire Canvas
+          </Button>
+        ) : null}
       </div>
       <div className="canvas-container">
-        <canvas
-          id="canvas"
-          width="600px"
-          height="400px"
-          className="canvas-pane"
-          ref={canvas}
-          onClick={(e) => onCanvasMouseClick(e)}
-          onMouseMove={(e) => onCanvasMouseMove(e)}
-          onMouseUp={() => onCanvasMouseUp()}
-          onMouseDown={() => onCanvasMouseDown()}
-          onMouseLeave={() => onCanvasMouseLeave()}
-          style={
-            canInteract
-              ? { backgroundColor: "white" }
-              : { backgroundColor: "#f0f0f0" }
-          }
-        ></canvas>
+        {selectedMode === "Print" ? (
+          <Form.Group className="mb-3" controlId="formBasicEmail">
+            <Form.Label>What would you like to sketch?</Form.Label>
+            <Form.Control
+              placeholder="An astronaut riding a dolphin in the style of Andy Warhol."
+              onChange={(e) => setPrompt(e.target.value)}
+            />
+            <Form.Text className="text-muted">
+              This prompt will be run through DALL·E, the resulting image and a
+              vector sketch conversion will be displayed below.
+            </Form.Text>
+            <br></br>
+            <br></br>
+            {props.originalImage === "" ? (
+              <Button
+                variant="outline-primary"
+                onClick={() => getImageFromOpenAI(prompt)}
+              >
+                Submit
+              </Button>
+            ) : null}
+          </Form.Group>
+        ) : null}
+        {selectedMode === "Draw" ? (
+          <canvas
+            id="canvas"
+            width="640px"
+            height="440px"
+            className="canvas-pane"
+            ref={canvas}
+            onClick={(e) => onCanvasMouseClick(e)}
+            onMouseMove={(e) => onCanvasMouseMove(e)}
+            onMouseUp={() => onCanvasMouseUp()}
+            onMouseDown={() => onCanvasMouseDown()}
+            onMouseLeave={() => onCanvasMouseLeave()}
+            style={
+              canInteract
+                ? { backgroundColor: "white" }
+                : { backgroundColor: "#f0f0f0" }
+            }
+          ></canvas>
+        ) : null}
         <div className="progress-bar-container">
-          <span style={{ marginBottom: "10px" }}>
-            {resetProgressBar ? "Reset Progress: " : ""}
-          </span>
+          {resetProgressBar ? (
+            <div style={{ marginBottom: "7px" }}>
+              This is how long it takes to reset:
+            </div>
+          ) : (
+            ""
+          )}
           {resetProgressBar ? (
             <ProgressBar
               striped
               variant="warning"
               animated
               now={props.resetProgress}
-              style={{ height: "30px" }}
+              style={{ height: "38px" }}
             />
           ) : null}
-          <span style={{ marginBottom: "10px" }}>
-            {drawProgressBar ? "Drawing Progress: " : ""}
-          </span>
+          {drawProgressBar ? (
+            <div style={{ marginBottom: "7px" }}>
+              This is how long it takes to draw:
+            </div>
+          ) : (
+            ""
+          )}
           {drawProgressBar ? (
             <ProgressBar
               striped
               variant="success"
               animated
               now={props.drawProgress}
-              style={{ height: "30px" }}
+              style={{ height: "38px" }}
             />
           ) : null}
           <br></br>
         </div>
       </div>
+      {selectedMode === "Print" && props.originalImage !== "" ? (
+        <div className="picture-container">
+          {selectedMode === "Print" && props.originalImage !== "" ? (
+            <img src={props.originalImage} alt="produced by DALL·E"></img>
+          ) : null}
+          {selectedMode === "Print" && props.vectorImage !== "" ? (
+            <img
+              src={props.vectorImage}
+              alt="vectorized, produced by DALL·E"
+            ></img>
+          ) : null}
+        </div>
+      ) : null}
       <div className="footer">
         <Button
           variant="outline-success"
           onClick={() => startDrawing()}
-          disabled={!canInteract}
+          disabled={!canStart}
         >
           Start Drawing
         </Button>
         <Button
           variant="outline-danger"
           onClick={() => stopDrawing()}
-          disabled={canInteract}
+          disabled={!canStop}
         >
           Stop Drawing
         </Button>
