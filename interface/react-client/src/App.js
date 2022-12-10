@@ -3,6 +3,8 @@ import "./App.css";
 import { DrawingPane } from "./Draw.js";
 
 var vectorImagePointsGlobal = [[0, 0]];
+const SERVER_PORT = 8081;
+const socket = new WebSocket("ws://localhost:" + SERVER_PORT);
 
 function App() {
   const [resetProgress, setResetProgess] = useState(0);
@@ -10,9 +12,6 @@ function App() {
   const [originalImage, setOriginalImage] = useState("");
   const [vectorImage, setVectorImage] = useState("");
   const [vectorImagePoints, setVectorImagePoints] = useState("");
-
-  const SERVER_PORT = 8081;
-  const socket = new WebSocket("ws://localhost:" + SERVER_PORT);
 
   function setupWebSocketConnection() {
     socket.onopen = openSocket; // perform when socket is opened

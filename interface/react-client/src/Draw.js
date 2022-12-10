@@ -189,7 +189,7 @@ export function DrawingPane(props) {
           setTimeout(() => {
             props.socket.send(arduinoInstructions[i]);
             arduinoInstructions.shift();
-          }, 5000)
+          }, 1000);
         }
       }
     }
@@ -213,11 +213,10 @@ export function DrawingPane(props) {
         // SL: S - Server, L - Line Instruction
         arduinoInstructions.push(
           "SL" +
-          " " +
-          Math.round(canvasPoints[i].x * 0.5) +
-          " " +
-          Math.round(canvasPoints[i].y * 0.5) +
-          " "
+            " " +
+            Math.round(canvasPoints[i].x * 0.5) +
+            " " +
+            Math.round(canvasPoints[i].y * 0.5)
         );
       }
     } else if (selectedMode === "Print") {
@@ -225,10 +224,10 @@ export function DrawingPane(props) {
         // SL: S - Server, L - Line Instruction
         arduinoInstructions.push(
           "SL" +
-          " " +
-          Math.round(props.imagePoints[i][0]) +
-          " " +
-          Math.round(props.imagePoints[i][1])
+            " " +
+            Math.round(props.imagePoints[i][0]) +
+            " " +
+            Math.round(props.imagePoints[i][1])
         );
       }
     }
@@ -428,8 +427,8 @@ export function DrawingPane(props) {
               animated
               now={
                 selectedMode === "Draw"
-                  ? props.drawProgress / canvasPoints.length
-                  : props.drawProgress / props.imagePoints.length
+                  ? (props.drawProgress / canvasPoints.length) * 100
+                  : (props.drawProgress / props.imagePoints.length) * 100
               }
               style={{ height: "38px" }}
             />

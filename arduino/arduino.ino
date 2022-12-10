@@ -143,130 +143,61 @@ void plotLine(int x0, int y0, int x1, int y1) {
 
 // the loop routine runs over and over again forever:
 void loop() {
-  // Serial.println(a);
-  // a += 1;
-  // delay(10000);  // delay in between reads for stability
+//  if (totalLinesProcessed == 122) {
+//    Serial.println("122 - readPointer: " + String(readPointer));
+//    Serial.println("122 - writePointer: " + String(writePointer));
+//  }
   if ((readPointer + 1) % 255 == writePointer) {
+//    Serial.println("reaches - readPointer: " + String(readPointer));
+//    Serial.println("reaches - writePointer: " + String(writePointer));
     return;
   }
   String currLine;
   while (Serial.available()) {
     currLine += char(Serial.read());
   }
-  // SD, SL <Int> <Int>, SR, AD <Int>, AR <Int>
+//  if (totalLinesProcessed == 122) {
+////    Serial.println("122 - currLine: " + currLine);
+//  }
   if (currLine.charAt(0) == 'S') {
     switch (currLine.charAt(1)) {
       case 'D':
-        digitalWrite(6, HIGH);
-        delay(3000);
-        digitalWrite(6, LOW);
-        delay (3000);
         break;
       case 'L':
       {
-        // char buf[255]
-        // char *p = buf;
-        // char *str;
-        // while ((str = strtok_r(p, " ", &p)) != NULL) // delimiter is the semicolon
-        // Serial.println(str);
         int spaceDelim1 = currLine.indexOf(" ");
-        String str = currLine.substring(spaceDelim1 + 1);
-        int i = 0;
-        int spaceDelim2;
-        while (str != "") {
-          // Serial.println(str.substring(0, spaceDelim1));
-          spaceDelim2 = str.indexOf(" ");
-          if (str != "SL") {
-            lineCoords[i] = str.substring(0, spaceDelim2).toInt();
-            // Serial.println(String(lineCoords[i]));
-            i += 1;
-          }
-          str = str.substring(spaceDelim2 + 1);
-          spaceDelim1 = spaceDelim2;
-          // Serial.println(str);
-        }
-        // Serial.println(i);
-        for (int c = 0; c < i; c++) {
-          // if (c + 1 >= i) {
-          //   break;
-          // }
-          if (c % 3 == 0) {
-            int xCoord = lineCoords[c];
-            int yCoord = lineCoords[c + 1];
-            lineInstructionsBuffer[writePointer] = (lineInstruction) {xCoord, yCoord};
-            writePointer = (writePointer + 1) % 255;
-            // Serial.println("X " + String(xCoord));
-            // Serial.println("Y " + String(yCoord));
-          }
-        }
-
-        // int spaceDelim2 = currLine.lastIndexOf(" ");
-        // int xCoord = currLine.substring(spaceDelim1 + 1, spaceDelim2).toInt();
-        // int yCoord = currLine.substring(spaceDelim2 + 1).toInt();
-        // lineInstructionsBuffer[writePointer] = (lineInstruction) {xCoord, yCoord};
-        // for (int i = 0; i < 255 * 3; i++) {
-        //   Serial.println(currLine[i]);
-        // }
-        // writePointer = (writePointer + 1) % 255;
-        // this will be in another function call...
-        // char *token = strtok(*currentLine, " ");
-        // // Keep printing tokens while one of the
-        // // delimiters present in str[].
-        // while (token != NULL)
-        // {
-        //     // printf("%s\n", token);
-        //     Serial.println(token);
-        //     token = strtok(NULL, " ");
-        // }
+        int spaceDelim2 = currLine.lastIndexOf(" ");
+        int xCoord = currLine.substring(spaceDelim1 + 1, spaceDelim2).toInt();
+        int yCoord = currLine.substring(spaceDelim2).toInt();
+        lineInstructionsBuffer[writePointer] = (lineInstruction) {xCoord, yCoord};
+        writePointer = (writePointer + 1) % 255;
         break;
       }
       case 'R':
         for (int i = 1; i <= 5; i++) {
-          // digitalWrite(6, HIGH);
-          // delay(1000);
-          // digitalWrite(6, LOW);
           delay (1000);
-          // this will be in another function call...
           Serial.println("AR " + String(i * 20));
         }
-        // Serial.println("AR " + String(100));
         break;
       default:
         break;
     }
-  }
-  // this will be in another function call...
+  }                           
+//  else {
+//    Serial.println()
+//  }
   if (readPointer == writePointer) {
+//    Serial.println("readPointer == writePointer");
     return;
   }
-  // int xCoord = lineInstructionsBuffer[readPointer].xCoord;
-  // int yCoord = lineInstructionsBuffer[readPointer].yCoord;
-  // this will be in another function call...
-  // digitalWrite(6, HIGH);
-  // delay(250);
-  // digitalWrite(6, LOW);
-  // delay (500);
-  // digitalWrite(6, HIGH);
-  // delay(750);
-  // digitalWrite(6, LOW);
-  // delay(1000);
-  // digitalWrite(6, HIGH);
-  // delay(1250);
-  // digitalWrite(6, LOW);
-  // delay(1500);
-  // for (int i = 0; i < 255; i++) {
   int xCoord = lineInstructionsBuffer[readPointer].xCoord;
   int yCoord = lineInstructionsBuffer[readPointer].yCoord;
-  Serial.println("X " + String(xCoord));
-  Serial.println("Y " + String(yCoord));
+  Serial.println("from: " + String(cursor_x) + ", " + String(cursor_y) + " to: " + String(xCoord) + ", " + String(yCoord));
   plotLine(cursor_x, cursor_y, xCoord, yCoord);
   delay(50);
   readPointer = (readPointer + 1) % 255;
   totalLinesProcessed += 1;
+  Serial.println("readPointer: " + String(readPointer));
+  Serial.println("writePointer: " + String(writePointer));
   Serial.println("AD " + String(totalLinesProcessed));
-  // }
-  // Serial.println("RP " + String(readPointer));
-  // Serial.println("WP " + String(writePointer));
-  // Serial.println(String(currLine));
-  // plotLine(10, 10, 70, 90);
 }
