@@ -24,7 +24,7 @@ var canvasPoints = [new CanvasPoint(0, 0)];
 var canvasDrawing = false;
 var arduinoInstructions = [];
 
-const BUFFER_SIZE = 255;
+const BUFFER_SIZE = 1;
 
 export function DrawingPane(props) {
   // STATE VARIABLES FOR DEFAULT
