@@ -9,7 +9,7 @@ export function Warning(props) {
       aria-labelledby="contained-modal-title-vcenter"
       centered
     >
-      <Modal.Header closeButton>
+      <Modal.Header>
         <Modal.Title id="contained-modal-title-vcenter">
           {props.title}
         </Modal.Title>
@@ -17,11 +17,13 @@ export function Warning(props) {
       <Modal.Body>
         <p>{props.body}</p>
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="outline-success" onClick={props.onHide}>
-          {props.button}
-        </Button>
-      </Modal.Footer>
+      {props.button !== "" ? (
+        <Modal.Footer>
+          <Button variant="outline-success" onClick={props.onHide}>
+            {props.button}
+          </Button>
+        </Modal.Footer>
+      ) : null}
     </Modal>
   );
 }

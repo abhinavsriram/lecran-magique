@@ -29,8 +29,6 @@ function App() {
     switch (instruction) {
       // AR: A - Arduino, R - Reset Progress
       case "AR":
-        console.log(message);
-        console.log(parseInt(message));
         setResetProgess(parseInt(message));
         break;
       // AD: A - Arduino, D - Draw Progress
@@ -46,12 +44,12 @@ function App() {
         for (var i = 0; i < message.length; i++) {
           var m = message[i];
           m = m.split(", ");
-          var numb = m[0].match(/\d/g);
-          numb = numb.join("");
-          m[0] = numb;
-          var numb = m[1].match(/\d/g);
-          numb = numb.join("");
-          m[1] = numb;
+          if (m[0] && m[0].match(/\d/g)) {
+            m[0] = m[0].match(/\d/g).join("");
+          }
+          if (m[1] && m[1].match(/\d/g)) {
+            m[1] = m[1].match(/\d/g).join("");
+          }
           vectorImagePointsGlobal.push(m);
         }
         break;

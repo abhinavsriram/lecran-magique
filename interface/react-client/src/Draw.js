@@ -24,6 +24,8 @@ var canvasPoints = [new CanvasPoint(0, 0)];
 var canvasDrawing = false;
 var arduinoInstructions = [];
 
+const BUFFER_SIZE = 255;
+
 export function DrawingPane(props) {
   // STATE VARIABLES FOR DEFAULT
   const [selectedMode, setSelectedMode] = useState("Draw");
@@ -38,6 +40,7 @@ export function DrawingPane(props) {
   // STATE VARIABLES FOR CAPSTONE
   const [prompt, setPrompt] = useState("");
   const [showPromptWarning, setShowPromptWarning] = useState(false);
+  const [showWorkingOnIt, setShowWorkingOnIt] = useState(false);
 
   // CANVAS UTILITY FUNCTIONS
   const drawPointsContiguous = () => {
@@ -146,6 +149,7 @@ export function DrawingPane(props) {
     setShowShakeWarning(true);
   };
 
+  // hide reset progress bar once reset is complete
   useEffect(() => {
     if (props.resetProgress === 100) {
       setResetProgressBar(false);
@@ -157,41 +161,65 @@ export function DrawingPane(props) {
     setShowShakeWarning(false);
     setCanStop(true);
     // SD: S - Server, D - Draw Instruction
-    props.socket.send("SD");
+    if (selectedMode === "Draw") {
+      props.socket.send("SD " + String(canvasPoints.length));
+    } else if (selectedMode === "Print") {
+      props.socket.send("SD " + String(props.imagePoints.length));
+    }
     reallyStartDrawing();
   };
 
   const reallyStartDrawing = () => {
     setDrawProgressBar(true);
     translateToArduino();
-    for (var i = 0; i < arduinoInstructions.length; i++) {
-      props.socket.send(arduinoInstructions[i]);
+    // send the first BUFFER_SIZE instructions
+    for (var i = 0; i < BUFFER_SIZE; i++) {
+      if (arduinoInstructions[i]) {
+        props.socket.send(arduinoInstructions[i]);
+        arduinoInstructions.shift();
+      }
     }
   };
+
+  // send subsequent batches of BUFFER_SIZE instructions
+  useEffect(() => {
+    if (props.drawProgress % BUFFER_SIZE === 0) {
+      for (var i = 0; i < BUFFER_SIZE; i++) {
+        if (arduinoInstructions[i]) {
+          props.socket.send(arduinoInstructions[i]);
+          arduinoInstructions.shift();
+        }
+      }
+    }
+  }, [props.drawProgress, props.socket]);
 
   const stopDrawing = () => {
     setDrawProgressBar(false);
     setCanInteract(true);
     setCanStart(true);
     clearAllPoints();
+    // SS: S - Server, S - Stop Instruction
+    props.socket.send("SS");
   };
 
   // TRANSLATE TO ARDUINO INSTRUCTIONS
   const translateToArduino = () => {
+    var i;
     arduinoInstructions = [];
     if (selectedMode === "Draw") {
-      for (var i = 0; i < canvasPoints.length; i++) {
+      for (i = 0; i < canvasPoints.length; i++) {
         // SL: S - Server, L - Line Instruction
         arduinoInstructions.push(
           "SL" +
             " " +
             Math.round(canvasPoints[i].x * 0.5) +
             " " +
-            Math.round(canvasPoints[i].y * 0.5)
+            Math.round(canvasPoints[i].y * 0.5) +
+            " "
         );
       }
     } else if (selectedMode === "Print") {
-      for (var i = 0; i < props.imagePoints.length; i++) {
+      for (i = 0; i < props.imagePoints.length; i++) {
         // SL: S - Server, L - Line Instruction
         arduinoInstructions.push(
           "SL" +
@@ -229,6 +257,7 @@ export function DrawingPane(props) {
       // everything after this must be called in a callback once openai responds
       // run python script to get vector image
       props.socket.send("PY " + image_url);
+      setShowWorkingOnIt(true);
     }
   };
 
@@ -236,14 +265,24 @@ export function DrawingPane(props) {
     setShowPromptWarning(false);
   };
 
+  // images are retrieved from Python script
   useEffect(() => {
     if (props.originalImage !== "" && props.vectorImage !== "") {
       setCanStart(true);
+      setShowWorkingOnIt(false);
     }
   }, [props.originalImage, props.vectorImage, props.imagePoints]);
 
   return (
     <div className="main-container">
+      <Warning
+        title={"Working On It"}
+        body={
+          "DALL·E is hard at work to produce something interesting and so is an OpenCV Python script that creates the vector image."
+        }
+        button={""}
+        show={showWorkingOnIt}
+      ></Warning>
       <Warning
         title={"Enter a Prompt"}
         body={
@@ -385,7 +424,11 @@ export function DrawingPane(props) {
               striped
               variant="success"
               animated
-              now={props.drawProgress}
+              now={
+                selectedMode === "Draw"
+                  ? props.drawProgress / canvasPoints.length
+                  : props.drawProgress / props.imagePoints.length
+              }
               style={{ height: "38px" }}
             />
           ) : null}
