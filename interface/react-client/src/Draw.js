@@ -199,7 +199,10 @@ export function DrawingPane(props) {
     setDrawProgressBar(false);
     setCanInteract(true);
     setCanStart(true);
+    setCanStop(false);
+    canvasDrawing = false;
     clearAllPoints();
+    drawPointsContiguous();
     // SS: S - Server, S - Stop Instruction
     props.socket.send("SS");
   };
@@ -213,10 +216,10 @@ export function DrawingPane(props) {
         // SL: S - Server, L - Line Instruction
         arduinoInstructions.push(
           "SL" +
-          " " +
-          Math.round(canvasPoints[i].x * 0.5) +
-          " " +
-          Math.round(canvasPoints[i].y * 0.5)
+            " " +
+            Math.round(canvasPoints[i].x * 0.5) +
+            " " +
+            Math.round(canvasPoints[i].y * 0.5)
         );
       }
     } else if (selectedMode === "Print") {
@@ -224,10 +227,10 @@ export function DrawingPane(props) {
         // SL: S - Server, L - Line Instruction
         arduinoInstructions.push(
           "SL" +
-          " " +
-          Math.round(props.imagePoints[i][0]) +
-          " " +
-          Math.round(props.imagePoints[i][1])
+            " " +
+            Math.round(props.imagePoints[i][0]) +
+            " " +
+            Math.round(props.imagePoints[i][1])
         );
       }
     }

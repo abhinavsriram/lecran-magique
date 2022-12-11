@@ -13,10 +13,10 @@ int totalLinesProcessed = 0;
 int totalLinesToDraw = 0;
 int pwm_val_1 = 0;
 int pwm_val_2 = 0;
-int pwm_val_3 = 0;
-int LED_PIN_1 = 0;
+//int pwm_val_3 = 0;
+int LED_PIN_1 = 10;
 int LED_PIN_2 = 1;
-int LED_PIN_3 = 10;
+//int LED_PIN_3 = 10;
 int phase_size;
 int increment_size;
 int end_sequence = 0;
@@ -35,11 +35,12 @@ void setup() {
   myStepper2.setSpeed(500);
   Serial.begin(9600);
 
-  pinMode(0, OUTPUT);
-  attachInterrupt(digitalPinToInterrupt(0), interruptServiceRoutine, HIGH);
+  pinMode(0, INPUT);
+  attachInterrupt(digitalPinToInterrupt(0), interruptServiceRoutine, RISING);
 }
 
 void interruptServiceRoutine() {
+  Serial.println("trigerred");
   digitalWrite(2, LOW);
   digitalWrite(3, LOW);
   digitalWrite(4, LOW);
@@ -174,20 +175,17 @@ void updateProgressBar(){
   if (totalLinesProcessed <= phase_size){
        analogWrite(LED_PIN_1, pwm_val_1);
        pwm_val_1 += increment_size;
-   }else if (totalLinesProcessed <= phase_size*2){
+   }else if (totalLinesProcessed < phase_size*2){
        analogWrite(LED_PIN_2, pwm_val_2);
        pwm_val_2 += increment_size;
-   }else if (totalLinesProcessed < phase_size*3){
-       analogWrite(LED_PIN_3, pwm_val_3);
-       pwm_val_3 += increment_size;
-   } else if (totalLinesProcessed >= phase_size*3 && end_sequence <= 5){
+   } else if (totalLinesProcessed >= phase_size*2 && end_sequence <= 5){
        analogWrite(LED_PIN_1, 0);
        analogWrite(LED_PIN_2, 0);
-       analogWrite(LED_PIN_3, 0);
+//       analogWrite(LED_PIN_3, 0);
        delay(500);
        analogWrite(LED_PIN_1, 255);
        analogWrite(LED_PIN_2, 255);
-       analogWrite(LED_PIN_3, 255);
+//       analogWrite(LED_PIN_3, 255);
        delay(500);
        end_sequence++;
    }
@@ -200,6 +198,7 @@ void WDT_Handler(){
 
 // the loop routine runs over and over again forever:
 void loop() {
+//  Serial.println(digitalRead(10));
   WDT->CLEAR.reg = 0xA5;
 //  if (totalLinesProcessed == 122) {
 //    Serial.println("122 - readPointer: " + String(readPointer));
@@ -294,7 +293,7 @@ void loop() {
   delay(50);
   readPointer = (readPointer + 1) % 255;
   totalLinesProcessed += 1;
-//  updateProgressBar();
+  updateProgressBar();
   Serial.println("readPointer: " + String(readPointer));
   Serial.println("writePointer: " + String(writePointer));
   Serial.println("AD " + String(totalLinesProcessed));
