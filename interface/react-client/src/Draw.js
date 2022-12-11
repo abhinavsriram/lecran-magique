@@ -213,10 +213,10 @@ export function DrawingPane(props) {
         // SL: S - Server, L - Line Instruction
         arduinoInstructions.push(
           "SL" +
-            " " +
-            Math.round(canvasPoints[i].x * 0.5) +
-            " " +
-            Math.round(canvasPoints[i].y * 0.5)
+          " " +
+          Math.round(canvasPoints[i].x * 0.5) +
+          " " +
+          Math.round(canvasPoints[i].y * 0.5)
         );
       }
     } else if (selectedMode === "Print") {
@@ -224,10 +224,10 @@ export function DrawingPane(props) {
         // SL: S - Server, L - Line Instruction
         arduinoInstructions.push(
           "SL" +
-            " " +
-            Math.round(props.imagePoints[i][0]) +
-            " " +
-            Math.round(props.imagePoints[i][1])
+          " " +
+          Math.round(props.imagePoints[i][0]) +
+          " " +
+          Math.round(props.imagePoints[i][1])
         );
       }
     }
@@ -380,8 +380,8 @@ export function DrawingPane(props) {
         {selectedMode === "Draw" ? (
           <canvas
             id="canvas"
-            width="640px"
-            height="440px"
+            width="660px"
+            height="480px"
             className="canvas-pane"
             ref={canvas}
             onClick={(e) => onCanvasMouseClick(e)}
