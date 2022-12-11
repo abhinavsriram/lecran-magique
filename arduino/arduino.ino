@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <Stepper.h>
 
 typedef struct {
@@ -100,13 +99,13 @@ void plotLineLow(int x0, int y0, int x1, int y1) {
     int y = y0;
     bool hasYChanged = false;
 
-    if (dx != 0 && dy != 0 && horzDirChange(xi)) {
-      myStepper1.step(stepsPerRevolution * 15);
-    }
-
-    if (dy != 0 && dx != 0 && vertDirChange(yi)) {
-      myStepper2.step(stepsPerRevolution * 15);
-    }
+//    if (dx != 0 && dy != 0 && horzDirChange(xi)) {
+//      myStepper1.step(stepsPerRevolution * 15);
+//    }
+//
+//    if (dy != 0 && dx != 0 && vertDirChange(yi)) {
+//      myStepper2.step(stepsPerRevolution * 15);
+//    }
 
     for (int x = x0; ; x += xi) {
         if (xi == 1) {
@@ -155,13 +154,13 @@ void plotLineHigh(int x0, int y0, int x1, int y1) {
     int x = x0;
     bool hasXChanged = false;
 
-    if (dx != 0 && dy != 0 && horzDirChange(xi)) {
-      myStepper1.step(stepsPerRevolution * 15);
-    }
-
-    if (dy != 0 && dx != 0 && vertDirChange(yi)) {
-      myStepper2.step(stepsPerRevolution * 15);
-    }
+//    if (dx != 0 && dy != 0 && horzDirChange(xi)) {
+//      myStepper1.step(stepsPerRevolution * 15);
+//    }
+//
+//    if (dy != 0 && dx != 0 && vertDirChange(yi)) {
+//      myStepper2.step(stepsPerRevolution * 15);
+//    }
 
     for (int y = y0; ; y += yi) {
         if (yi == 1) {

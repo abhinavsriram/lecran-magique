@@ -40,7 +40,7 @@ function App() {
       case "AS":
         setStopDrawing(true);
         break;
-      // AD: A - Arduino, S - Watchdog Tripped
+      // AD: A - Arduino, W - Watchdog Tripped
       case "AW":
         setWatchdogTripped(true);
         break;
