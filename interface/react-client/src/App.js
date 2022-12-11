@@ -2,16 +2,18 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import { DrawingPane } from "./Draw.js";
 
-var vectorImagePointsGlobal = [[0, 0]];
+var imagePointsGlobal = [[0, 0]];
 const SERVER_PORT = 8081;
 const socket = new WebSocket("ws://localhost:" + SERVER_PORT);
 
 function App() {
   const [resetProgress, setResetProgess] = useState(0);
   const [drawProgress, setDrawProgess] = useState(0);
+  const [stopDrawing, setStopDrawing] = useState(false);
+  const [watchdogTripped, setWatchdogTripped] = useState(false);
   const [originalImage, setOriginalImage] = useState("");
   const [vectorImage, setVectorImage] = useState("");
-  const [vectorImagePoints, setVectorImagePoints] = useState("");
+  const [imagePoints, setImagePoints] = useState("");
 
   function setupWebSocketConnection() {
     socket.onopen = openSocket; // perform when socket is opened
@@ -34,6 +36,14 @@ function App() {
       case "AD":
         setDrawProgess(parseInt(message));
         break;
+      // AD: A - Arduino, S - Stop Motors
+      case "AS":
+        setStopDrawing(true);
+        break;
+      // AD: A - Arduino, S - Watchdog Tripped
+      case "AW":
+        setWatchdogTripped(true);
+        break;
       // IP: I - Image, P - Points
       case "IP":
         message = message.join(" ");
@@ -49,12 +59,12 @@ function App() {
           if (m[1] && m[1].match(/\d/g)) {
             m[1] = m[1].match(/\d/g).join("");
           }
-          vectorImagePointsGlobal.push(m);
+          imagePointsGlobal.push(m);
         }
         break;
       // IR: I - Image, R - Resource
       case "IR":
-        setVectorImagePoints(vectorImagePointsGlobal);
+        setImagePoints(imagePointsGlobal);
         const originalImagePath = "/images/" + message + ".jpeg";
         setOriginalImage(originalImagePath);
         const vectorImagePath = "/images/" + message + ".svg";
@@ -75,9 +85,11 @@ function App() {
         socket={socket}
         resetProgress={resetProgress}
         drawProgress={drawProgress}
+        stopDrawing={stopDrawing}
+        watchdogTripped={watchdogTripped}
         originalImage={originalImage}
         vectorImage={vectorImage}
-        imagePoints={vectorImagePoints}
+        imagePoints={imagePoints}
       ></DrawingPane>
     </div>
   );

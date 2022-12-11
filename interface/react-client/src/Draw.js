@@ -34,7 +34,7 @@ export function DrawingPane(props) {
   const [showShakeWarning, setShowShakeWarning] = useState(false);
   const [canInteract, setCanInteract] = useState(true);
   const [canStart, setCanStart] = useState(true);
-  const [canStop, setCanStop] = useState(false);
+  // const [canStop, setCanStop] = useState(false);
   const canvas = useRef(null);
 
   // STATE VARIABLES FOR CAPSTONE
@@ -138,7 +138,7 @@ export function DrawingPane(props) {
     props.socket.send("SR");
     setCanInteract(false);
     setCanStart(false);
-    setCanStop(false);
+    // setCanStop(false);
   };
 
   const startReset = () => {
@@ -159,7 +159,7 @@ export function DrawingPane(props) {
 
   const confirmShakeWarning = () => {
     setShowShakeWarning(false);
-    setCanStop(true);
+    // setCanStop(true);
     // SD: S - Server, D - Draw Instruction
     if (selectedMode === "Draw") {
       props.socket.send("SD " + String(canvasPoints.length));
@@ -195,17 +195,35 @@ export function DrawingPane(props) {
     }
   }, [props.drawProgress]);
 
-  const stopDrawing = () => {
+  // inform user that drawing has been stopped by ISR
+  useEffect(() => {
     setDrawProgressBar(false);
     setCanInteract(true);
     setCanStart(true);
-    setCanStop(false);
+    // setCanStop(false);
     canvasDrawing = false;
     clearAllPoints();
     drawPointsContiguous();
-    // SS: S - Server, S - Stop Instruction
-    props.socket.send("SS");
-  };
+  }, [props.stopDrawing]);
+
+  // inform user that drawing has been stopped by ISR
+  useEffect(() => {
+    setTimeout(() => {
+      window.location.reload(true);
+    }, 30000);
+  }, [props.watchdogTripped]);
+
+  // const stopDrawing = () => {
+  //   setDrawProgressBar(false);
+  //   setCanInteract(true);
+  //   setCanStart(true);
+  //   setCanStop(false);
+  //   canvasDrawing = false;
+  //   clearAllPoints();
+  //   drawPointsContiguous();
+  //   // SS: S - Server, S - Stop Instruction
+  //   props.socket.send("SS");
+  // };
 
   // TRANSLATE TO ARDUINO INSTRUCTIONS
   const translateToArduino = () => {
@@ -304,6 +322,22 @@ export function DrawingPane(props) {
         button={"Confirm"}
         show={showShakeWarning}
         onHide={() => confirmShakeWarning()}
+      ></Warning>
+      <Warning
+        title={"The Etch A Sketch Has Been Stopped"}
+        body={
+          "The Etch A Sketch was stopped using the hardware button on the device. The prior drawing cannot be continued, please draw something again and click the Start Drawing button when ready."
+        }
+        button={"Okay"}
+        show={props.stopDrawing}
+      ></Warning>
+      <Warning
+        title={"The Etch A Sketch Has Been Stopped"}
+        body={
+          "The Etch A Sketch was stopped because of a system failure. The prior drawing cannot be continued, the web interface will reset itself in 30 seconds automatically and the hardware system must be reset manually."
+        }
+        button={"Okay"}
+        show={props.watchdogTripped}
       ></Warning>
       <div className="header">
         <Dropdown>
@@ -460,13 +494,13 @@ export function DrawingPane(props) {
         >
           Start Drawing
         </Button>
-        <Button
+        {/* <Button
           variant="outline-danger"
           onClick={() => stopDrawing()}
           disabled={!canStop}
         >
           Stop Drawing
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

@@ -1,46 +1,47 @@
 #include <Arduino.h>
-#include <Stepper.h>
 
 typedef struct {
   int xCoord;
   int yCoord;
 } lineInstruction;
+
 lineInstruction lineInstructionsBuffer[255];
+
 int readPointer = 0;
 int writePointer = 0;
 
 int totalLinesProcessed = 0;
 int totalLinesToDraw = 0;
+
 int pwm_val_1 = 0;
 int pwm_val_2 = 0;
-//int pwm_val_3 = 0;
 int LED_PIN_1 = 10;
 int LED_PIN_2 = 1;
-//int LED_PIN_3 = 10;
+
+int BUTTON_PIN = 0;
+
 int phase_size;
 int increment_size;
 int end_sequence = 0;
 
-int lineCoords[100];
-
 const int stepsPerRevolution = 30;
 int cursor_x = 0;
 int cursor_y = 0;
+
 Stepper myStepper1(stepsPerRevolution, 2, 3, 4, 5);
 Stepper myStepper2(stepsPerRevolution, 6, 7, 8, 9);
 
 void setup() {
-  // pinMode(6, OUTPUT);
-  myStepper1.setSpeed(500); // max speed = 500
+  myStepper1.setSpeed(500);
   myStepper2.setSpeed(500);
   Serial.begin(9600);
 
-  pinMode(0, INPUT);
-  attachInterrupt(digitalPinToInterrupt(0), interruptServiceRoutine, RISING);
+  pinMode(BUTTON_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), interruptServiceRoutine, RISING);
 }
 
 void interruptServiceRoutine() {
-  Serial.println("trigerred");
+  Serial.println("AS");
   digitalWrite(2, LOW);
   digitalWrite(3, LOW);
   digitalWrite(4, LOW);
@@ -78,15 +79,12 @@ void plotLineLow(int x0, int y0, int x1, int y1) {
             break;
           }
         }
-        // Serial.println(String(x) + ", " + String(y));
         if (hasYChanged) {
           myStepper2.step(-stepsPerRevolution * yi);
-        //  WDT->CLEAR.reg = 0xA5;
           delay(3);
         }
         if (x != x0) {
           myStepper1.step(stepsPerRevolution * xi);
-        //  WDT->CLEAR.reg = 0xA5;
           delay(3);
         }
         if (D > 0) {
@@ -128,15 +126,12 @@ void plotLineHigh(int x0, int y0, int x1, int y1) {
             break;
           }
         }
-        // Serial.println(String(x) + ", " + String(y));
         if (hasXChanged) {
           myStepper1.step(stepsPerRevolution * xi);
-        //  WDT->CLEAR.reg = 0xA5;
           delay(3);
         }
         if (y != y0) {
           myStepper2.step(-stepsPerRevolution * yi);
-        //  WDT->CLEAR.reg = 0xA5;
           delay(3);
         }
         if (D > 0) {
@@ -153,15 +148,12 @@ void plotLineHigh(int x0, int y0, int x1, int y1) {
 void plotLine(int x0, int y0, int x1, int y1) {
     if (abs(y1 - y0) < abs(x1 - x0)) {
         if (x0 > x1) {
-            // plotLineLow(x1, y1, x0, y0);
             plotLineLow(x0, y0, x1, y1);
         } else {
-            // plotLineLow(x0, y0, x1, y1);
             plotLineLow(x0, y0, x1, y1);
         }
     } else {
         if (y0 > y1) {
-            // plotLineHigh(x1, y1, x0, y0);
             plotLineHigh(x0, y0, x1, y1);
         } else {
             plotLineHigh(x0, y0, x1, y1);
@@ -181,11 +173,9 @@ void updateProgressBar(){
    } else if (totalLinesProcessed >= phase_size*2 && end_sequence <= 5){
        analogWrite(LED_PIN_1, 0);
        analogWrite(LED_PIN_2, 0);
-//       analogWrite(LED_PIN_3, 0);
        delay(500);
        analogWrite(LED_PIN_1, 255);
        analogWrite(LED_PIN_2, 255);
-//       analogWrite(LED_PIN_3, 255);
        delay(500);
        end_sequence++;
    }
@@ -196,26 +186,15 @@ void WDT_Handler(){
   Serial.println("Warning: watchdog reset imminent!");
 }
 
-// the loop routine runs over and over again forever:
 void loop() {
-//  Serial.println(digitalRead(10));
   WDT->CLEAR.reg = 0xA5;
-//  if (totalLinesProcessed == 122) {
-//    Serial.println("122 - readPointer: " + String(readPointer));
-//    Serial.println("122 - writePointer: " + String(writePointer));
-//  }
   if ((readPointer + 1) % 255 == writePointer) {
-//    Serial.println("reaches - readPointer: " + String(readPointer));
-//    Serial.println("reaches - writePointer: " + String(writePointer));
     return;
   }
   String currLine;
   while (Serial.available()) {
     currLine += char(Serial.read());
   }
-//  if (totalLinesProcessed == 122) {
-////    Serial.println("122 - currLine: " + currLine);
-//  }
   if (currLine.charAt(0) == 'S') {
     switch (currLine.charAt(1)) {
       case 'D':
@@ -279,11 +258,7 @@ void loop() {
         break;
     }
   }                           
-//  else {
-//    Serial.println()
-//  }
   if (readPointer == writePointer) {
-//    Serial.println("readPointer == writePointer");
     return;
   }
   int xCoord = lineInstructionsBuffer[readPointer].xCoord;
