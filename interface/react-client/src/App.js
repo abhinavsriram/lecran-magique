@@ -1,19 +1,27 @@
-import { useEffect, useState } from "react";
+// custom CSS styling file
 import "./App.css";
-import { DrawingPane } from "./Draw.js";
+// component with all interactive components to draw on Etch A Sketch
+import { EtchPanel } from "./EtchPanel.js";
+// react components
+import { useEffect, useState } from "react";
 
+// array of all coordinates representing image to be plotted
 var imagePointsGlobal = [[0, 0]];
+// port on which web socket server has been opened
 const SERVER_PORT = 8081;
+// variable that represents the opened web socket
 const socket = new WebSocket("ws://localhost:" + SERVER_PORT);
 
 function App() {
-  const [resetProgress, setResetProgess] = useState(0);
-  const [drawProgress, setDrawProgess] = useState(-1);
-  const [stopDrawing, setStopDrawing] = useState(false);
-  const [watchdogTripped, setWatchdogTripped] = useState(false);
-  const [originalImage, setOriginalImage] = useState("");
-  const [vectorImage, setVectorImage] = useState("");
-  const [imagePoints, setImagePoints] = useState("");
+  // STATE VARIABLES FOR BASE IMPLEMENTATION
+  const [resetComplete, setResetComplete] = useState(false); // bool to track whether reset process is complete
+  const [drawProgress, setDrawProgess] = useState(-1); // int to track number of lines plotted
+  const [stopDrawing, setStopDrawing] = useState(false); // bool to track whether ISR was tripped to stop drawing
+
+  // STATE VARIABLES FOR CAPSTONE
+  const [originalImage, setOriginalImage] = useState(""); // original image file path
+  const [vectorImage, setVectorImage] = useState(""); // vector image file path
+  const [imagePoints, setImagePoints] = useState([]); // array tracking coordinates to be plotted for vector image
 
   function setupWebSocketConnection() {
     socket.onopen = openSocket; // perform when socket is opened
@@ -21,17 +29,16 @@ function App() {
   }
 
   function openSocket() {
-    // socket.send("Hello Arduino!");
+    socket.send("Hello Arduino!");
   }
 
   // reading from Server
   function showData(data) {
     var [instruction, ...message] = String(data.data).split(" ");
     switch (instruction) {
-      // AR: A - Arduino, R - Reset Progress
+      // AR: A - Arduino, R - Reset Status
       case "AR":
-        console.log("AR recieved");
-        setResetProgess(100);
+        setResetComplete(true);
         break;
       // AD: A - Arduino, D - Draw Progress
       case "AD":
@@ -40,10 +47,6 @@ function App() {
       // AD: A - Arduino, S - Stop Motors
       case "AS":
         setStopDrawing(true);
-        break;
-      // AD: A - Arduino, W - Watchdog Tripped
-      case "AW":
-        setWatchdogTripped(true);
         break;
       // IP: I - Image, P - Points
       case "IP":
@@ -76,22 +79,22 @@ function App() {
     }
   }
 
+  // set up web socket connection upon first web page load
   useEffect(() => {
     setupWebSocketConnection();
   }, []);
 
   return (
     <div className="App">
-      <DrawingPane
+      <EtchPanel
         socket={socket}
-        resetProgress={resetProgress}
+        resetComplete={resetComplete}
         drawProgress={drawProgress}
         stopDrawing={stopDrawing}
-        watchdogTripped={watchdogTripped}
         originalImage={originalImage}
         vectorImage={vectorImage}
         imagePoints={imagePoints}
-      ></DrawingPane>
+      ></EtchPanel>
     </div>
   );
 }

@@ -1,9 +1,11 @@
+// importing SerialPort package
 const SerialPort = require("serialport");
+// importing WebSocketServer package
 const WebSocketServer = require("ws").Server;
+// importing child_process package
 const Spawn = require("child_process").spawn;
 
 // SERIAL COMMUNICATION
-
 function listSerialPorts() {
   SerialPort.list().then(
     (ports) => ports.forEach((port) => console.log(port.path)), // list all ports on machine
@@ -47,7 +49,7 @@ function readFromSerial(data) {
 function broadcastToClient(data) {
   var connection;
   for (connection in connections) {
-    connections[connection].send(data); // send the data to each connection
+    connections[connection].send(data); // send the data to each client connection
   }
 }
 
@@ -60,7 +62,6 @@ function showOnError(error) {
 }
 
 // WEB SOCKET COMMUNICATION
-
 function setupWebSocketServer(portNumber) {
   wss = new WebSocketServer({ port: portNumber }); // make a new websocket server
   configureWebSocketServer();
@@ -68,7 +69,7 @@ function setupWebSocketServer(portNumber) {
 
 function configureWebSocketServer() {
   connections = new Array(); // list of connections to the server
-  wss.on("connection", handleConnection); // upon establishin a connection, call handleConnection
+  wss.on("connection", handleConnection); // upon establishing a connection, call handleConnection
 }
 
 // read from Client
@@ -80,28 +81,27 @@ function readFromWebSocket(data) {
     );
     broadcastToArduino(data);
   }
-  // instruction ("PY") from Client meant to run Python script
+  // instruction ("PY") from Client meant to run Python script to get vector image and svg files
   if (String(data)[0] === "P") {
     let parsedData = String(data).split(" ");
-    // call on broadcastToClient(data) where data = VI <url of vector image>
     const pythonProcess = Spawn("python3", [
       "../../vectorize/master.py",
-      parsedData[1], // link to original image
+      parsedData[1], // url to original image
     ]);
     var coordinates = "";
     var file = "";
     pythonProcess.stdout.on("data", (data) => {
       if (String(data).length === 6) {
-        file = String(data);
+        file = String(data); // name of generated image and svg files
       } else {
-        coordinates = coordinates.concat(String(data));
+        coordinates = coordinates.concat(String(data)); // coordinates from svg file
       }
     });
     setTimeout(() => {
-      broadcastToClient("IR " + file);
+      broadcastToClient("IR " + file); // send file names to Client
       const coordinateRowArray = coordinates.split(";");
       for (var i = 0; i < coordinateRowArray.length; i++) {
-        broadcastToClient("IP " + coordinateRowArray[i]);
+        broadcastToClient("IP " + coordinateRowArray[i]); // send coordinates to Client
       }
     }, 5000);
   }
@@ -125,7 +125,6 @@ function handleConnection(client) {
 }
 
 // MAIN METHOD
-
 var sp; // global var to store reference to serial port instance
 var wss; // global var to store reference to websocket server instance
 var connections; // global var to store reference to all websocket connections
@@ -133,6 +132,7 @@ var connections; // global var to store reference to all websocket connections
 function main() {
   const BAUD_RATE = 9600; // baud rate for the serial port connection
   const SERVER_PORT = 8081; // port number for the websocket server
+  // configuring command line behavior
   if (process.argv.length === 4 && process.argv[2] === "--port") {
     setupSerialConnection(process.argv[3], BAUD_RATE);
     setupWebSocketServer(SERVER_PORT);

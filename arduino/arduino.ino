@@ -346,7 +346,7 @@ state update_fsm(state curState, String msg){
       if (msg == "SR"){ // 1-2 
          reset();
          resetComplete = true;
-         Serial.println("AR 100");
+         Serial.println("AR ");
          nextState = sRESET;
          return nextState;
         } else {

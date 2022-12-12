@@ -1,12 +1,17 @@
-import "./Draw.css";
+// custom CSS styling file
+import "./EtchPanel.css";
+// bootstrap styling and components
 import "bootstrap/dist/css/bootstrap.css";
-import { useEffect, useRef, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Dropdown from "react-bootstrap/Dropdown";
 import ProgressBar from "react-bootstrap/ProgressBar";
-import { Warning } from "./Warning";
+// custom popup modal
+import { PopUp } from "./PopUp";
+// react components
+import { useEffect, useRef, useState } from "react";
 
+// OPEN AI config values to make API calls to DALL·E
 import { Configuration, OpenAIApi } from "openai";
 const OPENAI_API_KEY = "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";
 const configuration = new Configuration({
@@ -14,35 +19,42 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
+// object to represent a point on the canvas
 class CanvasPoint {
   constructor(x, y) {
     this.x = x;
     this.y = y;
   }
 }
+// array of all coordinates plotted on the canvas
 var canvasPoints = [new CanvasPoint(0, 0)];
+// bool that represents if the canvas is currently being drawn on
 var canvasDrawing = false;
+// array of all instructions to be sent to Arduino
 var arduinoInstructions = [];
 
+// number of instructions to be sent at once
 const BUFFER_SIZE = 1;
 
-export function DrawingPane(props) {
-  // STATE VARIABLES FOR DEFAULT
-  const [selectedMode, setSelectedMode] = useState("Draw");
-  const [resetProgressBar, setResetProgressBar] = useState(false);
-  const [drawProgressBar, setDrawProgressBar] = useState(false);
-  const [showShakeWarning, setShowShakeWarning] = useState(false);
-  const [canInteract, setCanInteract] = useState(true);
-  const [canStart, setCanStart] = useState(true);
-  // const [canStop, setCanStop] = useState(false);
-  const canvas = useRef(null);
+export function EtchPanel(props) {
+  // STATE VARIABLES FOR BASE IMPLEMENTATION
+  const [selectedMode, setSelectedMode] = useState("Draw"); // default mode is Draw
+  const [resetPopUp, setResetPopUp] = useState(false); // bool to display reset popup
+  const [shakePopUp, setShakePopUp] = useState(false); // bool to display shake popup
+  const [canInteract, setCanInteract] = useState(true); // bool to determine if user can interact with UI
+  const [canStart, setCanStart] = useState(true); // bool to determine if user can hit Start Drawing button
+  const [sketchProgressBar, setSketchProgressBar] = useState(false); // bool to display sketch progress bar
+  const [sketchSuccessPopUp, setSketchSuccessPopUp] = useState(false); // bool to display sketch success popup
+  const canvas = useRef(null); // reference to canvas element
 
   // STATE VARIABLES FOR CAPSTONE
-  const [prompt, setPrompt] = useState("");
-  const [showPromptWarning, setShowPromptWarning] = useState(false);
-  const [showWorkingOnIt, setShowWorkingOnIt] = useState(false);
+  const [prompt, setPrompt] = useState(""); // prompt for DALL·E
+  const [propmtPopUp, setPromptPopUp] = useState(false); // bool to display prompt popup
+  const [workingPopUp, setWorkingPopUp] = useState(false); // bool to display "working on it" popup
 
   // CANVAS UTILITY FUNCTIONS
+  // Draws all points currenly present in canvasPoints as if the canvas
+  // were an Etch A Sketch i.e., segments are drawn contiguously.
   const drawPointsContiguous = () => {
     const ctx = canvas.current.getContext("2d");
     ctx.strokeStyle = "black";
@@ -132,34 +144,38 @@ export function DrawingPane(props) {
   };
 
   // GENERAL UTILITY FUNCTIONS
+  // Once the Start Drawing button is pressed, the first step is to
+  // initiate the cursor reset process by sending an SR instruction.
   const startDrawing = () => {
     startReset();
     // SR: S - Server, R - Reset Instruction
     props.socket.send("SR");
     setCanInteract(false);
     setCanStart(false);
-    // setCanStop(false);
   };
 
   const startReset = () => {
-    setResetProgressBar(true);
+    setResetPopUp(true);
   };
 
-  const shakeWarning = () => {
-    setShowShakeWarning(true);
+  const displayShakePopUp = () => {
+    setShakePopUp(true);
   };
 
-  // hide reset progress bar once reset is complete
+  // hide reset popup once reset is complete
+  // also show popup asking user to shake the Etch A Sketch to clear screen
   useEffect(() => {
-    if (props.resetProgress === 100) {
-      setResetProgressBar(false);
-      shakeWarning();
+    if (props.resetComplete) {
+      setResetPopUp(false);
+      setTimeout(() => {
+        displayShakePopUp();
+      }, 2500);
     }
-  }, [props.resetProgress]);
+  }, [props.resetComplete]);
 
-  const confirmShakeWarning = () => {
-    setShowShakeWarning(false);
-    // setCanStop(true);
+  // once the user clears the screen, send an SD instruction to transition states
+  const confirmShakePopUp = () => {
+    setShakePopUp(false);
     // SD: S - Server, D - Draw Instruction
     if (selectedMode === "Draw") {
       props.socket.send("SD " + String(canvasPoints.length));
@@ -169,19 +185,13 @@ export function DrawingPane(props) {
     reallyStartDrawing();
   };
 
+  // display drawing progress bar and convert coordinates to Arduino instructions
   const reallyStartDrawing = () => {
-    setDrawProgressBar(true);
+    setSketchProgressBar(true);
     translateToArduino();
-    // send the first BUFFER_SIZE instructions
-    // for (var i = 0; i < BUFFER_SIZE; i++) {
-    //   if (arduinoInstructions[i]) {
-    //     props.socket.send(arduinoInstructions[i]);
-    //     arduinoInstructions.shift();
-    //   }
-    // }
   };
 
-  // send subsequent batches of BUFFER_SIZE instructions
+  // send instructions to Arduino in batches of BUFFER_SIZE
   useEffect(() => {
     if (props.drawProgress % BUFFER_SIZE === 0) {
       for (var i = 0; i < BUFFER_SIZE; i++) {
@@ -196,34 +206,33 @@ export function DrawingPane(props) {
   }, [props.drawProgress]);
 
   // inform user that drawing has been stopped by ISR
+  // reset all state variables appropriately
   useEffect(() => {
-    setDrawProgressBar(false);
+    setSketchProgressBar(false);
     setCanInteract(true);
     setCanStart(true);
-    // setCanStop(false);
     canvasDrawing = false;
     clearAllPoints();
     drawPointsContiguous();
   }, [props.stopDrawing]);
 
-  // inform user that drawing has been stopped by Watchdog
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     window.location.reload(true);
-  //   }, 30000);
-  // }, [props.watchdogTripped]);
-
-  // const stopDrawing = () => {
-  //   setDrawProgressBar(false);
-  //   setCanInteract(true);
-  //   setCanStart(true);
-  //   setCanStop(false);
-  //   canvasDrawing = false;
-  //   clearAllPoints();
-  //   drawPointsContiguous();
-  //   // SS: S - Server, S - Stop Instruction
-  //   props.socket.send("SS");
-  // };
+  // hide draw progress bar once drawing is complete
+  // also display drawing success popup
+  useEffect(() => {
+    if (
+      selectedMode === "Draw" &&
+      (props.drawProgress / canvasPoints.length) * 100 === 100
+    ) {
+      setSketchProgressBar(false);
+      setSketchSuccessPopUp(true);
+    } else if (
+      selectedMode === "Print" &&
+      (props.drawProgress / props.imagePoints.length) * 100 === 100
+    ) {
+      setSketchProgressBar(false);
+      setSketchSuccessPopUp(true);
+    }
+  }, [props.drawProgress, props.imagePoints.length]);
 
   // TRANSLATE TO ARDUINO INSTRUCTIONS
   const translateToArduino = () => {
@@ -257,8 +266,10 @@ export function DrawingPane(props) {
   // CAPSTONE FEATURE FUNCTIONS
   const getImageFromOpenAI = async (prompt) => {
     if (prompt === "" || prompt.length < 30) {
-      setShowPromptWarning(true);
+      setPromptPopUp(true);
     } else {
+      // prod:
+      // setWorkingPopUp(true);
       // try {
       //   const response = await openai.createImage({
       //     prompt: prompt,
@@ -266,7 +277,7 @@ export function DrawingPane(props) {
       //     size: "256x256",
       //   });
       //   const image_url = response.data.data[0].url;
-      //   console.log(image_url);
+      //   props.socket.send("PY " + image_url);
       // } catch (error) {
       //   if (error.response) {
       //     console.log(error.response.status);
@@ -275,70 +286,86 @@ export function DrawingPane(props) {
       //     console.log(error.message);
       //   }
       // }
+      // test:
       const image_url = "https://picsum.photos/256/256";
-      // everything after this must be called in a callback once openai responds
-      // run python script to get vector image
       props.socket.send("PY " + image_url);
-      setShowWorkingOnIt(true);
+      setWorkingPopUp(true);
     }
   };
 
-  const confirmPromptWarning = () => {
-    setShowPromptWarning(false);
+  const confirmPromptPopUp = () => {
+    setPromptPopUp(false);
   };
 
-  // images are retrieved from Python script
+  // Python script has returned images and coordinates to be plotted
   useEffect(() => {
     if (props.originalImage !== "" && props.vectorImage !== "") {
       setCanStart(true);
-      setShowWorkingOnIt(false);
+      setWorkingPopUp(false);
     }
   }, [props.originalImage, props.vectorImage, props.imagePoints]);
 
   return (
     <div className="main-container">
-      <Warning
-        title={"Working On It"}
+      <PopUp
+        title={"Resetting The Etch A Sketch Cursor"}
         body={
-          "DALL·E is hard at work to produce something interesting and so is an OpenCV Python script that creates the vector image."
+          "The Etch A Sketch Cursor is being reset to its start position. This popup will disappear once this process is complete."
         }
-        button={""}
-        show={showWorkingOnIt}
-      ></Warning>
-      <Warning
-        title={"Enter a Prompt"}
-        body={
-          "Enter a descriptive (at least 40 character) prompt for DALL·E to produce something interesting."
-        }
-        button={"Okay"}
-        show={showPromptWarning}
-        onHide={() => confirmPromptWarning()}
-      ></Warning>
-      <Warning
+        show={resetPopUp}
+      ></PopUp>
+      <PopUp
         title={"Clear The Etch A Sketch"}
         body={
           "Shake the Etch A Sketch to clear the screen and hit confirm once you have done this and placed the Etch A Sketch back on a flat surface."
         }
         button={"Confirm"}
-        show={showShakeWarning}
-        onHide={() => confirmShakeWarning()}
-      ></Warning>
-      <Warning
+        show={shakePopUp}
+        onHide={() => confirmShakePopUp()}
+      ></PopUp>
+      <PopUp
         title={"The Etch A Sketch Has Been Stopped"}
         body={
           "The Etch A Sketch was stopped using the hardware button on the device. The prior drawing cannot be continued, please draw something again and click the Start Drawing button when ready."
         }
         button={"Okay"}
         show={props.stopDrawing}
-      ></Warning>
-      <Warning
-        title={"The Etch A Sketch Has Been Stopped"}
+        onHide={() => {
+          setTimeout(() => {
+            window.location.reload(true);
+          }, 2500);
+        }}
+      ></PopUp>
+      <PopUp
+        title={"The Drawing Is Complete"}
         body={
-          "The Etch A Sketch was stopped because of a system failure. The prior drawing cannot be continued, the web interface will reset itself in 30 seconds automatically and the hardware system must be reset manually."
+          "The drawing is complete, you can now show off your masterpiece or make another one."
         }
         button={"Okay"}
-        show={props.watchdogTripped}
-      ></Warning>
+        show={sketchSuccessPopUp}
+        onHide={() => {
+          setTimeout(() => {
+            window.location.reload(true);
+          }, 2500);
+        }}
+      ></PopUp>
+      <PopUp
+        title={"Enter a Prompt"}
+        body={
+          "Enter a descriptive (at least 40 character) prompt for DALL·E to produce something interesting."
+        }
+        button={"Okay"}
+        show={propmtPopUp}
+        onHide={() => confirmPromptPopUp()}
+      ></PopUp>
+      <PopUp
+        title={"Working On It"}
+        body={
+          "DALL·E is hard at work to produce something interesting and so is an OpenCV Python script that creates the vector image."
+        }
+        button={""}
+        show={workingPopUp}
+      ></PopUp>
       <div className="header">
         <Dropdown>
           <Dropdown.Toggle
@@ -434,30 +461,14 @@ export function DrawingPane(props) {
           ></canvas>
         ) : null}
         <div className="progress-bar-container">
-          {resetProgressBar ? (
+          {sketchProgressBar ? (
             <div style={{ marginBottom: "7px" }}>
-              This is how long it takes to reset:
+              This is how long it takes to sketch your masterpiece:
             </div>
           ) : (
             ""
           )}
-          {resetProgressBar ? (
-            <ProgressBar
-              striped
-              variant="warning"
-              animated
-              now={props.resetProgress}
-              style={{ height: "38px" }}
-            />
-          ) : null}
-          {drawProgressBar ? (
-            <div style={{ marginBottom: "7px" }}>
-              This is how long it takes to draw:
-            </div>
-          ) : (
-            ""
-          )}
-          {drawProgressBar ? (
+          {sketchProgressBar ? (
             <ProgressBar
               striped
               variant="success"
@@ -494,13 +505,6 @@ export function DrawingPane(props) {
         >
           Start Drawing
         </Button>
-        {/* <Button
-          variant="outline-danger"
-          onClick={() => stopDrawing()}
-          disabled={!canStop}
-        >
-          Stop Drawing
-        </Button> */}
       </div>
     </div>
   );
