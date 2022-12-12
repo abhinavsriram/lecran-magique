@@ -1,50 +1,126 @@
 #include <Stepper.h>
 
-typedef struct {
-  int xCoord;
-  int yCoord;
-} lineInstruction;
+// States
+typedef enum {
+  sWAITING = 1,
+  sRESET = 2,
+  sWAIT_TO_CLEAR = 3,
+  sCLEARED = 4,
+  sDRAWING = 5,
+  sREQ_INSTR = 6,
+} state;
 
-lineInstruction lineInstructionsBuffer[255];
-
-int readPointer = 0;
-int writePointer = 0;
-
-int totalLinesProcessed = 0;
-int totalLinesToDraw = 0;
+int BUTTON_PIN = 0;
+const int stepsPerRevolution = 30;
+bool isrTriggered;
+int prevHorzDir = 0;
+int prevVertDir = 0;
 
 int pwm_val_1 = 0;
 int pwm_val_2 = 0;
 int LED_PIN_1 = 10;
 int LED_PIN_2 = 1;
 
-int BUTTON_PIN = 0;
-
 int phase_size;
 int increment_size;
 int end_sequence = 0;
 
-const int stepsPerRevolution = 30;
-int cursor_x = 0;
-int cursor_y = 0;
 
-Stepper myStepper1(stepsPerRevolution, 2, 3, 4, 5);
-Stepper myStepper2(stepsPerRevolution, 6, 7, 8, 9);
+// Stores x and y coordinates of an SL instruction
+typedef struct {
+  int xCoord;
+  int yCoord;
+} lineInstruction;
 
-int prevHorzDir = 0;
-int prevVertDir = 0;
+// Buffer that holds series of SL instructions
+lineInstruction lineInstructionsBuffer[255];
+// Advances when SL command has executed
+int readPointer;
+// Advances when SL command is received
+int writePointer;
+bool resetComplete;
+
+int totalLinesProcessed, totalLinesToDraw, cursorX, cursorY, latestX, latestY;
+
+Stepper horzStepper(stepsPerRevolution, 2, 3, 4, 5);
+Stepper vertStepper(stepsPerRevolution, 6, 7, 8, 9);
+
+state CURRENT_STATE;
 
 void setup() {
-  myStepper1.setSpeed(500);
-  myStepper2.setSpeed(500);
-  Serial.begin(9600);
-
   pinMode(BUTTON_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), interruptServiceRoutine, RISING);
+  horzStepper.setSpeed(500);
+  vertStepper.setSpeed(500);
+  Serial.begin(9600);
+  while(!Serial);
+
+  CURRENT_STATE = (state) 1;
+  isrTriggered = false;
+  totalLinesToDraw = 0;
+  totalLinesProcessed = 1;
+  readPointer = 0;
+  writePointer = 0;
+  cursorX = 0;
+  cursorY = 0;
+  latestX = 0;
+  latestY = 0;
+}
+
+void loop() {
+  String serialMsg;
+  while (Serial.available()) {
+   serialMsg += char(Serial.read());
+  }
+  Serial.println(CURRENT_STATE);
+  Serial.println(totalLinesToDraw);
+  Serial.println( totalLinesProcessed);
+  CURRENT_STATE = update_fsm(CURRENT_STATE, serialMsg);
+  delay(10);
+  
+}
+
+//String receiveMsg(){
+//  String serialMsg;
+//  while (Serial.available()) {
+//   serialMsg += char(Serial.read());
+//  }
+//  return serialMsg;
+//}
+void configureWatchDog() {
+   NVIC_DisableIRQ(WDT_IRQn);
+   NVIC_ClearPendingIRQ(WDT_IRQn);
+   NVIC_SetPriority(WDT_IRQn, 0);
+   NVIC_EnableIRQ(WDT_IRQn);
+
+   // Configure and enable WDT GCLK:
+    GCLK->GENDIV.reg = GCLK_GENDIV_DIV(4) | GCLK_GENDIV_ID(5);
+    while (GCLK->STATUS.bit.SYNCBUSY);
+    GCLK->GENCTRL.reg = GCLK_GENCTRL_DIVSEL | GCLK_GENCTRL_ID(5) | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_SRC(3);
+    while (GCLK->STATUS.bit.SYNCBUSY);
+    GCLK->CLKCTRL.reg = GCLK_CLKCTRL_GEN(5) | GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_ID(3);
+   // Configure and enable WDT:
+    WDT->EWCTRL.reg = WDT_EWCTRL_EWOFFSET(9);
+    WDT->CONFIG.reg = WDT_CONFIG_PER(11);
+    WDT->CTRL.reg = WDT_CTRL_ENABLE;
+    while (WDT->STATUS.bit.SYNCBUSY);
+   // Enable early warning interrupts on WDT:
+    WDT->INTENSET.reg = WDT_INTENSET_EW;
+}
+
+void disableWatchDog(){
+   NVIC_DisableIRQ(WDT_IRQn);
+   NVIC_ClearPendingIRQ(WDT_IRQn);
+    WDT->CTRL.reg = 0;
+   
 }
 
 void interruptServiceRoutine() {
-  Serial.println("AS");
+  Serial.println("AS ");
+  for (int i = 0; i<255; i++){
+    lineInstructionsBuffer[i] = {0, 0};
+  }
+  CURRENT_STATE = (state) 1;
   digitalWrite(2, LOW);
   digitalWrite(3, LOW);
   digitalWrite(4, LOW);
@@ -53,6 +129,7 @@ void interruptServiceRoutine() {
   digitalWrite(7, LOW);
   digitalWrite(8, LOW);  
   digitalWrite(9, LOW);
+
 }
 
 boolean horzDirChange(int dir) {
@@ -119,11 +196,13 @@ void plotLineLow(int x0, int y0, int x1, int y1) {
           }
         }
         if (hasYChanged) {
-          myStepper2.step(-stepsPerRevolution * yi);
+          vertStepper.step(-stepsPerRevolution * yi);
+          WDT->CLEAR.reg = 0xA5;
           delay(3);
         }
         if (x != x0) {
-          myStepper1.step(stepsPerRevolution * xi);
+          horzStepper.step(stepsPerRevolution * xi);
+          WDT->CLEAR.reg = 0xA5;
           delay(3);
         }
         if (D > 0) {
@@ -174,11 +253,13 @@ void plotLineHigh(int x0, int y0, int x1, int y1) {
           }
         }
         if (hasXChanged) {
-          myStepper1.step(stepsPerRevolution * xi);
+          horzStepper.step(stepsPerRevolution * xi);
+          WDT->CLEAR.reg = 0xA5;
           delay(3);
         }
         if (y != y0) {
-          myStepper2.step(-stepsPerRevolution * yi);
+          vertStepper.step(-stepsPerRevolution * yi);
+          WDT->CLEAR.reg = 0xA5;
           delay(3);
         }
         if (D > 0) {
@@ -206,16 +287,9 @@ void plotLine(int x0, int y0, int x1, int y1) {
             plotLineHigh(x0, y0, x1, y1);
         }
     }
-    cursor_x = x1;
-    cursor_y = y1;
-  //   digitalWrite(2, LOW);
-  // digitalWrite(3, LOW);
-  // digitalWrite(4, LOW);
-  // digitalWrite(5, LOW);
-  // digitalWrite(6, LOW);
-  // digitalWrite(7, LOW);
-  // digitalWrite(8, LOW);  
-  // digitalWrite(9, LOW);
+    cursorX = x1;
+    cursorY = y1;
+//    Serial.println("plotLine executes ---------------------------------------------------------------");
 }
 
 void updateProgressBar(){
@@ -225,7 +299,8 @@ void updateProgressBar(){
    }else if (totalLinesProcessed < phase_size*2){
        analogWrite(LED_PIN_2, pwm_val_2);
        pwm_val_2 += increment_size;
-   } else if (totalLinesProcessed >= phase_size*2 && end_sequence <= 5){
+   } else if (totalLinesProcessed >= phase_size*2&& end_sequence <= 5){
+       disableWatchDog();
        analogWrite(LED_PIN_1, 0);
        analogWrite(LED_PIN_2, 0);
        delay(500);
@@ -241,103 +316,130 @@ void WDT_Handler(){
   Serial.println("Warning: watchdog reset imminent!");
 }
 
-int c = 0;
+void reset(){
+  plotLine(cursorX, cursorY, 0, 0);
+  isrTriggered = false;
+  prevHorzDir = 0;
+  prevVertDir = 0;
+  pwm_val_1 = 0;
+  pwm_val_2 = 0;
+  phase_size = 0;
+  increment_size = 0;
+  end_sequence = 0;
+  totalLinesProcessed = 1;
+  totalLinesToDraw = 0; 
+  cursorX = 0;
+  cursorY= 0;
+  latestX = 0;
+  latestY = 0;
+  readPointer = 0;
+  writePointer = 0;
+}
 
-void loop() {
-  if (c >= 1) {
-    return;
-  }
 
-  plotLine(0, 0, 75, 75);
-  delay(3000);
-  plotLine(0, 0, 75, -75);
-  delay(3000);
-  plotLine(0, 0, -150, 0);
-  delay(3000);
-  c++;
-  // WDT->CLEAR.reg = 0xA5;
-  // if ((readPointer + 1) % 255 == writePointer) {
-  //   return;
-  // }
-  // String currLine;
-  // while (Serial.available()) {
-  //   currLine += char(Serial.read());
-  // }
-  // if (currLine.charAt(0) == 'S') {
-  //   switch (currLine.charAt(1)) {
-  //     case 'D':
-  //     {
-  //       int spaceDelim = currLine.indexOf(" ");
-  //       totalLinesToDraw = currLine.substring(spaceDelim + 1).toInt(); // could be wrong parsing
-  //       Serial.println(String(totalLinesToDraw));
-  //       phase_size = totalLinesToDraw/3; 
-  //       increment_size = 255/phase_size;
-        
-  //       // Watch this, Dog!
 
-  //       // Clear and enable WDT
-  //       NVIC_DisableIRQ(WDT_IRQn);
-  //       NVIC_ClearPendingIRQ(WDT_IRQn);
-  //       NVIC_SetPriority(WDT_IRQn, 0);
-  //       NVIC_EnableIRQ(WDT_IRQn);
-      
-  //       // Configure and enable WDT GCLK:
-  //        GCLK->GENDIV.reg = GCLK_GENDIV_DIV(4) | GCLK_GENDIV_ID(5);
-  //        while (GCLK->STATUS.bit.SYNCBUSY);
-  //        GCLK->GENCTRL.reg = GCLK_GENCTRL_DIVSEL | GCLK_GENCTRL_ID(5) | GCLK_GENCTRL_GENEN | GCLK_GENCTRL_SRC(3);
-  //        while (GCLK->STATUS.bit.SYNCBUSY);
-  //        GCLK->CLKCTRL.reg = GCLK_CLKCTRL_GEN(5) | GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_ID(3);
-  //       // Configure and enable WDT:
-  //        WDT->EWCTRL.reg = WDT_EWCTRL_EWOFFSET(8);
-  //        WDT->CONFIG.reg = WDT_CONFIG_PER(9);
-  //        WDT->CTRL.reg = WDT_CTRL_ENABLE;
-  //        while (WDT->STATUS.bit.SYNCBUSY);
-      
-  //       // Enable early warning interrupts on WDT:
-  //        WDT->INTENSET.reg = WDT_INTENSET_EW;
 
-  //       break;
-  //     }
-  //     case 'L':
-  //     {
-  //       if (totalLinesProcessed == totalLinesToDraw || totalLinesProcessed == totalLinesToDraw - 1 || totalLinesProcessed == totalLinesToDraw - 2) {
-  //         Serial.println("INTENCLR Register");
-  //          WDT->INTENCLR.reg = WDT_INTENCLR_EW;
-  //       }
-  //       WDT->CLEAR.reg = 0xA5;
-  //       int spaceDelim1 = currLine.indexOf(" ");
-  //       int spaceDelim2 = currLine.lastIndexOf(" ");
-  //       int xCoord = currLine.substring(spaceDelim1 + 1, spaceDelim2).toInt();
-  //       int yCoord = currLine.substring(spaceDelim2).toInt();
-  //       lineInstructionsBuffer[writePointer] = (lineInstruction) {xCoord, yCoord};
-  //       writePointer = (writePointer + 1) % 255;
-  //       break;
-  //     }
-  //     case 'R':
-  //       for (int i = 1; i <= 5; i++) {
-  //         delay (1000);
-  //         Serial.println("AR " + String(i * 20));
-  //       }
-  //       break;
-  //     case 'S':
-  //       digitalWrite(0, HIGH);
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  // }                           
-  // if (readPointer == writePointer) {
-  //   return;
-  // }
-  // int xCoord = lineInstructionsBuffer[readPointer].xCoord;
-  // int yCoord = lineInstructionsBuffer[readPointer].yCoord;
-  // Serial.println("from: " + String(cursor_x) + ", " + String(cursor_y) + " to: " + String(xCoord) + ", " + String(yCoord));
-  // plotLine(cursor_x, cursor_y, xCoord, yCoord);
-  // delay(50);
-  // readPointer = (readPointer + 1) % 255;
-  // totalLinesProcessed += 1;
-  // updateProgressBar();
-  // Serial.println("readPointer: " + String(readPointer));
-  // Serial.println("writePointer: " + String(writePointer));
-  // Serial.println("AD " + String(totalLinesProcessed));
+state update_fsm(state curState, String msg){
+  state nextState;
+  switch(curState){
+    case sWAITING:
+      if (msg == "SR"){ // 1-2 
+         reset();
+         resetComplete = true;
+         Serial.println("AR 100");
+         nextState = sRESET;
+         return nextState;
+        } else {
+          nextState = curState;
+          return nextState;
+        }
+      break;
+    case sRESET:
+      if (resetComplete){ // 2-3 
+         resetComplete = false;
+         nextState = sWAIT_TO_CLEAR;
+         return nextState;
+        } else {
+          nextState = curState;
+          return nextState;
+        }
+      break;
+    case sWAIT_TO_CLEAR:
+      if (msg.charAt(0) == 'S' && msg.charAt(1) == 'D') { // 3-4 
+        int spaceDelim = msg.indexOf(" ");
+             
+   
+        totalLinesToDraw = msg.substring(spaceDelim + 1).toInt();
+              
+         phase_size = totalLinesToDraw/2; 
+         increment_size = 255/phase_size;
+        configureWatchDog();
+        nextState = sCLEARED;
+        Serial.println("AD " + String(totalLinesProcessed));
+        return nextState;
+        } else {
+          nextState = curState;
+          return nextState;
+        }
+      break;
+    case sCLEARED:
+      if (cursorX == latestX && cursorY == latestY){ // 4-6
+         nextState = sREQ_INSTR;
+         return nextState;
+      } else {
+          nextState = curState;
+          return nextState;
+        }
+      break;
+    case sDRAWING:
+      if (isrTriggered) { //5-1
+        isrTriggered = false;
+            nextState = sWAITING;
+            return nextState;
+      }
+      else if  (cursorX == latestX && cursorY == latestY) { // 5-6
+         int xCoord = lineInstructionsBuffer[readPointer].xCoord;
+         int yCoord = lineInstructionsBuffer[readPointer].yCoord;
+         plotLine(cursorX, cursorY, xCoord, yCoord);
+         latestX = xCoord;
+         latestY = yCoord;
+         delay(50);
+         readPointer = (readPointer + 1) % 255;
+         totalLinesProcessed += 1;
+         updateProgressBar();
+         Serial.println("AD " + String(totalLinesProcessed));
+         if (totalLinesToDraw == totalLinesProcessed){ // 5-1
+            nextState = sWAITING;
+            return nextState;}
+         nextState = sREQ_INSTR;
+         return nextState;
+      } else if (totalLinesToDraw == totalLinesProcessed || isrTriggered){ // 5-1
+        isrTriggered = false;
+        nextState = sWAITING;
+        return nextState;
+      } else {
+         nextState = curState;
+         return nextState;
+      }
+      break;
+    case sREQ_INSTR:
+      if (msg.charAt(0) == 'S' && msg.charAt(1) == 'L'){ // 6-5
+         int spaceDelim1 = msg.indexOf(" ");
+         int spaceDelim2 = msg.lastIndexOf(" ");
+         int xCoord = msg.substring(spaceDelim1 + 1, spaceDelim2).toInt();
+         int yCoord = msg.substring(spaceDelim2).toInt();
+         lineInstructionsBuffer[writePointer] = (lineInstruction) {xCoord, yCoord};
+         writePointer = (writePointer + 1) % 255;
+         nextState = sDRAWING;
+//         WDT->CLEAR.reg = 0xA5;
+         return nextState;
+      } else {
+          nextState = curState;
+          return nextState;
+        }
+      break;
+    default:
+         nextState = sWAITING;
+      break;
+}
 }

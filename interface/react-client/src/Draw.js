@@ -173,12 +173,12 @@ export function DrawingPane(props) {
     setDrawProgressBar(true);
     translateToArduino();
     // send the first BUFFER_SIZE instructions
-    for (var i = 0; i < BUFFER_SIZE; i++) {
-      if (arduinoInstructions[i]) {
-        props.socket.send(arduinoInstructions[i]);
-        arduinoInstructions.shift();
-      }
-    }
+    // for (var i = 0; i < BUFFER_SIZE; i++) {
+    //   if (arduinoInstructions[i]) {
+    //     props.socket.send(arduinoInstructions[i]);
+    //     arduinoInstructions.shift();
+    //   }
+    // }
   };
 
   // send subsequent batches of BUFFER_SIZE instructions
@@ -206,12 +206,12 @@ export function DrawingPane(props) {
     drawPointsContiguous();
   }, [props.stopDrawing]);
 
-  // inform user that drawing has been stopped by ISR
-  useEffect(() => {
-    setTimeout(() => {
-      window.location.reload(true);
-    }, 30000);
-  }, [props.watchdogTripped]);
+  // inform user that drawing has been stopped by Watchdog
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     window.location.reload(true);
+  //   }, 30000);
+  // }, [props.watchdogTripped]);
 
   // const stopDrawing = () => {
   //   setDrawProgressBar(false);

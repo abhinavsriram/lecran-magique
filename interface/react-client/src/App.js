@@ -8,7 +8,7 @@ const socket = new WebSocket("ws://localhost:" + SERVER_PORT);
 
 function App() {
   const [resetProgress, setResetProgess] = useState(0);
-  const [drawProgress, setDrawProgess] = useState(0);
+  const [drawProgress, setDrawProgess] = useState(-1);
   const [stopDrawing, setStopDrawing] = useState(false);
   const [watchdogTripped, setWatchdogTripped] = useState(false);
   const [originalImage, setOriginalImage] = useState("");
@@ -30,7 +30,8 @@ function App() {
     switch (instruction) {
       // AR: A - Arduino, R - Reset Progress
       case "AR":
-        setResetProgess(parseInt(message));
+        console.log("AR recieved");
+        setResetProgess(100);
         break;
       // AD: A - Arduino, D - Draw Progress
       case "AD":
