@@ -75,7 +75,8 @@ void updateProgressBar();
 void reset();
 
 /*
- * Line plotting helper functions.
+ * Line plotting helper functions. Adapted from 
+   https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm.
  */
 lineInstruction extractLineInstruction(String msg);
 void plotLine(int x0, int y0, int x1, int y1);
