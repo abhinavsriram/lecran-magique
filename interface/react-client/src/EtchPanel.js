@@ -179,8 +179,18 @@ export function EtchPanel(props) {
     // SD: S - Server, D - Draw Instruction
     if (selectedMode === "Draw") {
       props.socket.send("SD " + String(canvasPoints.length));
+      // SF: S - Server, F - First Instruction
+      setTimeout(() => {
+        props.socket.send("SF 0 0");
+        arduinoInstructions.shift();
+      }, 2500);
     } else if (selectedMode === "Print") {
       props.socket.send("SD " + String(props.imagePoints.length));
+      // SF: S - Server, F - First Instruction
+      setTimeout(() => {
+        props.socket.send("SF 0 0");
+        arduinoInstructions.shift();
+      }, 2500);
     }
     reallyStartDrawing();
   };
@@ -193,14 +203,12 @@ export function EtchPanel(props) {
 
   // send instructions to Arduino in batches of BUFFER_SIZE
   useEffect(() => {
-    if (props.drawProgress % BUFFER_SIZE === 0) {
-      for (var i = 0; i < BUFFER_SIZE; i++) {
-        if (arduinoInstructions[i]) {
-          setTimeout(() => {
-            props.socket.send(arduinoInstructions[i]);
-            arduinoInstructions.shift();
-          }, 1000);
-        }
+    for (var i = 0; i < BUFFER_SIZE; i++) {
+      if (arduinoInstructions[i]) {
+        setTimeout(() => {
+          props.socket.send(arduinoInstructions[i]);
+          arduinoInstructions.shift();
+        }, 1000);
       }
     }
   }, [props.drawProgress]);
@@ -221,18 +229,18 @@ export function EtchPanel(props) {
   useEffect(() => {
     if (
       selectedMode === "Draw" &&
-      (props.drawProgress / canvasPoints.length) * 100 === 100
+      ((props.drawProgress + 1) / canvasPoints.length) * 100 === 100
     ) {
       setSketchProgressBar(false);
       setSketchSuccessPopUp(true);
     } else if (
       selectedMode === "Print" &&
-      (props.drawProgress / props.imagePoints.length) * 100 === 100
+      ((props.drawProgress + 1) / props.imagePoints.length) * 100 === 100
     ) {
       setSketchProgressBar(false);
       setSketchSuccessPopUp(true);
     }
-  }, [props.drawProgress, props.imagePoints.length]);
+  }, [props.drawProgress]);
 
   // TRANSLATE TO ARDUINO INSTRUCTIONS
   const translateToArduino = () => {
@@ -255,9 +263,9 @@ export function EtchPanel(props) {
         arduinoInstructions.push(
           "SL" +
             " " +
-            Math.round(props.imagePoints[i][0]) +
+            Math.round(props.imagePoints[i][0] * 0.5) +
             " " +
-            Math.round(props.imagePoints[i][1])
+            Math.round(props.imagePoints[i][1] * 0.5)
         );
       }
     }
@@ -287,7 +295,8 @@ export function EtchPanel(props) {
       //   }
       // }
       // test:
-      const image_url = "https://picsum.photos/256/256";
+      const image_url =
+        "https://cdn.shopify.com/s/files/1/0590/3305/9479/files/cup_of_coffee_for_websites_256x256_crop_center.jpg?v=1630283140";
       props.socket.send("PY " + image_url);
       setWorkingPopUp(true);
     }
@@ -312,6 +321,7 @@ export function EtchPanel(props) {
         body={
           "The Etch A Sketch Cursor is being reset to its start position. This popup will disappear once this process is complete."
         }
+        button={""}
         show={resetPopUp}
       ></PopUp>
       <PopUp
@@ -333,7 +343,20 @@ export function EtchPanel(props) {
         onHide={() => {
           setTimeout(() => {
             window.location.reload(true);
-          }, 2500);
+          }, 1000);
+        }}
+      ></PopUp>
+      <PopUp
+        title={"The Etch A Sketch Has Been Stopped"}
+        body={
+          "The Etch A Sketch was stopped due to a system failure. The web interface will force refresh in 10 seconds and the hardware system must be reset manually."
+        }
+        button={"Okay"}
+        show={props.watchdogTripped}
+        onHide={() => {
+          setTimeout(() => {
+            window.location.reload(true);
+          }, 10000);
         }}
       ></PopUp>
       <PopUp
@@ -344,6 +367,7 @@ export function EtchPanel(props) {
         button={"Okay"}
         show={sketchSuccessPopUp}
         onHide={() => {
+          setSketchSuccessPopUp(false);
           setTimeout(() => {
             window.location.reload(true);
           }, 2500);
@@ -475,8 +499,8 @@ export function EtchPanel(props) {
               animated
               now={
                 selectedMode === "Draw"
-                  ? (props.drawProgress / canvasPoints.length) * 100
-                  : (props.drawProgress / props.imagePoints.length) * 100
+                  ? ((props.drawProgress + 1) / canvasPoints.length) * 100
+                  : ((props.drawProgress + 1) / props.imagePoints.length) * 100
               }
               style={{ height: "38px" }}
             />

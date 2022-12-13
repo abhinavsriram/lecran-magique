@@ -54,6 +54,7 @@ function broadcastToClient(data) {
 }
 
 function showOnPortClose() {
+  broadcastToClient("AW "); // let client know that Watchdog was tripped
   console.log("SERVER UPDATE: Serial Port (" + sp.path + ") Closed.");
 }
 

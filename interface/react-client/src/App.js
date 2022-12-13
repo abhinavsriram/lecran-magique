@@ -17,6 +17,7 @@ function App() {
   const [resetComplete, setResetComplete] = useState(false); // bool to track whether reset process is complete
   const [drawProgress, setDrawProgess] = useState(-1); // int to track number of lines plotted
   const [stopDrawing, setStopDrawing] = useState(false); // bool to track whether ISR was tripped to stop drawing
+  const [watchdogTripped, setWatchdogTripped] = useState(false); // bool to track whether Watchdog was tripped
 
   // STATE VARIABLES FOR CAPSTONE
   const [originalImage, setOriginalImage] = useState(""); // original image file path
@@ -44,9 +45,13 @@ function App() {
       case "AD":
         setDrawProgess(parseInt(message));
         break;
-      // AD: A - Arduino, S - Stop Motors
+      // AS: A - Arduino, S - Stop Motors
       case "AS":
         setStopDrawing(true);
+        break;
+      // AW: A - Arduino, W - Watchdog Tripped
+      case "AW":
+        setWatchdogTripped(true);
         break;
       // IP: I - Image, P - Points
       case "IP":
@@ -91,6 +96,7 @@ function App() {
         resetComplete={resetComplete}
         drawProgress={drawProgress}
         stopDrawing={stopDrawing}
+        watchdogTripped={watchdogTripped}
         originalImage={originalImage}
         vectorImage={vectorImage}
         imagePoints={imagePoints}
