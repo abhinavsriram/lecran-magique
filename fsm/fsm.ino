@@ -38,7 +38,7 @@ void loop() {
 }
 
 state update_fsm(state curState, String msg){
-  state nextState;
+  state nextState = curState;
   switch(curState) {
     case sWAITING:
       // check the guard
@@ -47,10 +47,6 @@ state update_fsm(state curState, String msg){
         resetSystem();
         // transition to next state
         nextState = sRESET;
-        return nextState;
-      } else {
-        nextState = curState;
-        return nextState;
       }
       break;
     case sRESET:
@@ -60,10 +56,6 @@ state update_fsm(state curState, String msg){
         Serial.println("AR ");
         // transition to next state
         nextState = sWAIT_TO_CLEAR;
-        return nextState;
-      } else {
-        nextState = curState;
-        return nextState;
       }
       break;
     case sWAIT_TO_CLEAR:
@@ -78,10 +70,6 @@ state update_fsm(state curState, String msg){
         incrementSize = 255 / phaseSize;
         // transition to next state
         nextState = sCLEARED;
-        return nextState;
-      } else {
-        nextState = curState;
-        return nextState;
       }
       break;
     case sCLEARED:
@@ -95,10 +83,6 @@ state update_fsm(state curState, String msg){
         totalLinesProcessed += 1;
         // transition to next state
         nextState = sDRAWING;
-        return nextState;
-      } else {
-        nextState = curState;
-        return nextState;
       }
       break;
     case sDRAWING:
@@ -108,7 +92,6 @@ state update_fsm(state curState, String msg){
         disableWatchdog();
         // transition to next state
         nextState = sWAITING;
-        return nextState;
       } else if (cursorX == latestX && cursorY == latestY && totalLinesProcessed != totalLinesToDraw) { // transition 5-6
         // set the output
         int xCoord = lineInstructionsBuffer[readPointer].xCoord;
@@ -121,10 +104,6 @@ state update_fsm(state curState, String msg){
         latestY = yCoord;
         // transition to next state
         nextState = sREQ_INSTR;
-        return nextState;
-      } else {
-        nextState = curState;
-        return nextState;
       }
       break;
     case sREQ_INSTR:
@@ -137,14 +116,11 @@ state update_fsm(state curState, String msg){
         totalLinesProcessed += 1;
         // transition to next state
         nextState = sDRAWING;
-        return nextState;
-      } else {
-        nextState = curState;
-        return nextState;
       }
       break;
     default:
       nextState = sWAITING;
       break;
   }
+  return nextState;
 }
