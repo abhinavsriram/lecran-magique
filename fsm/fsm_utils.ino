@@ -136,6 +136,12 @@ lineInstruction extractLineInstruction(String msg) {
   return (lineInstruction) {xCoord, yCoord};
 }
 
+/*
+ * void plotLineLow(int x0, int y0, int x1, int y1) applies the Bresenham
+   algorithm for a gradual slope to find the points that approximate a 
+   straight line from (x0, y0) to (x1, y1) and calls on the motors to move the 
+   knobs in that direction. It also pets the watchdog after spinning a motor.
+ */
 void plotLineLow(int x0, int y0, int x1, int y1) {
   int dx = x1 - x0;
   int xi = 1;
@@ -184,6 +190,12 @@ void plotLineLow(int x0, int y0, int x1, int y1) {
   }
 }
 
+/*
+ * void plotLineHigh(int x0, int y0, int x1, int y1) applies the Bresenham
+   algorithm for a steep slope to find the points that approximate a 
+   straight line from (x0, y0) to (x1, y1) and calls on the motors to move the 
+   knobs in that direction. It also pets the watchdog after spinning a motor.
+ */
 void plotLineHigh(int x0, int y0, int x1, int y1) {
   int dx = x1 - x0;
   int dy = y1 - y0;
@@ -232,6 +244,12 @@ void plotLineHigh(int x0, int y0, int x1, int y1) {
   }
 }
 
+/*
+ * void plotLine(int x0, int y0, int x1, int y1) makes the appropriate call
+   to plotLineLow(x0, y0, x1, y1) or plotLineHigh(x0, y0, x1, y1) depending
+   on whether the slope is gradual or steep. It then updates the cursor's 
+   position to that of (x1, y1).
+ */
 void plotLine(int x0, int y0, int x1, int y1) {
   if (abs(y1 - y0) < abs(x1 - x0)) {
     plotLineLow(x0, y0, x1, y1);
