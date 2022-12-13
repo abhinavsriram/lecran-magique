@@ -169,7 +169,7 @@ export function EtchPanel(props) {
       setResetPopUp(false);
       setTimeout(() => {
         displayShakePopUp();
-      }, 2500);
+      }, 1000);
     }
   }, [props.resetComplete]);
 
@@ -370,7 +370,7 @@ export function EtchPanel(props) {
           setSketchSuccessPopUp(false);
           setTimeout(() => {
             window.location.reload(true);
-          }, 2500);
+          }, 1000);
         }}
       ></PopUp>
       <PopUp

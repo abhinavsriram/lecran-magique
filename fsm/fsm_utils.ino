@@ -27,7 +27,11 @@ void updateProgressBar() {
   } else if (totalLinesProcessed < phaseSize * 2) {
     analogWrite(LED_2_PIN, LED_2_PWM);
     LED_2_PWM += incrementSize;
-  } else if (totalLinesProcessed >= (phaseSize * 2) - 1) {
+  } else if 
+    (
+    (totalLinesProcessed % 2 == 0 && totalLinesProcessed >= (phaseSize * 2)) || 
+    (totalLinesProcessed % 2 != 0 && totalLinesProcessed > (phaseSize * 2))
+    ) {
     for (int i = 0; i < 5; i += 1) {
       analogWrite(LED_1_PIN, 0);
       analogWrite(LED_2_PIN, 0);
@@ -42,12 +46,10 @@ void updateProgressBar() {
 /*
  * void interruptServiceRoutine() is called when the ISR is trigerred by 
  * pressing the button on the circuit. It only takes effect when the system is
- * not in the sRESET state since while it is in that state, it is performing
- * a critical operation (which if not completed successfully could damage
- * the Etch A Sketch).
+ * in the sDRAWING or sREQ_INSTR states.
  */
 void interruptServiceRoutine() {
-  if (CURRENT_STATE != sRESET) {
+  if (CURRENT_STATE == sDRAWING || CURRENT_STATE == sREQ_INSTR) {
     disableWatchdog();
     Serial.println("AS ");
     CURRENT_STATE = sWAITING; 
@@ -94,7 +96,6 @@ void disableWatchdog() {
  */
 void WDT_Handler() {
   WDT->INTFLAG.bit.EW = 1;
-  Serial.println("Warning: Watchdog reset imminent!");
 }
 
 /*
@@ -138,9 +139,9 @@ lineInstruction extractLineInstruction(String msg) {
 
 /*
  * void plotLineLow(int x0, int y0, int x1, int y1) applies the Bresenham
-   algorithm for a gradual slope to find the points that approximate a 
-   straight line from (x0, y0) to (x1, y1) and calls on the motors to move the 
-   knobs in that direction. It also pets the watchdog after spinning a motor.
+ * algorithm for a gradual slope to find the points that approximate a 
+ * straight line from (x0, y0) to (x1, y1) and calls on the motors to move the 
+ * knobs in that direction. It also pets the Watchdog after spinning a motor.
  */
 void plotLineLow(int x0, int y0, int x1, int y1) {
   int dx = x1 - x0;
@@ -192,9 +193,9 @@ void plotLineLow(int x0, int y0, int x1, int y1) {
 
 /*
  * void plotLineHigh(int x0, int y0, int x1, int y1) applies the Bresenham
-   algorithm for a steep slope to find the points that approximate a 
-   straight line from (x0, y0) to (x1, y1) and calls on the motors to move the 
-   knobs in that direction. It also pets the watchdog after spinning a motor.
+ * algorithm for a steep slope to find the points that approximate a 
+ * straight line from (x0, y0) to (x1, y1) and calls on the motors to move the 
+ * knobs in that direction. It also pets the Watchdog after spinning a motor.
  */
 void plotLineHigh(int x0, int y0, int x1, int y1) {
   int dx = x1 - x0;
@@ -246,9 +247,9 @@ void plotLineHigh(int x0, int y0, int x1, int y1) {
 
 /*
  * void plotLine(int x0, int y0, int x1, int y1) makes the appropriate call
-   to plotLineLow(x0, y0, x1, y1) or plotLineHigh(x0, y0, x1, y1) depending
-   on whether the slope is gradual or steep. It then updates the cursor's 
-   position to that of (x1, y1).
+ * to plotLineLow(x0, y0, x1, y1) or plotLineHigh(x0, y0, x1, y1) depending
+ * on whether the slope is gradual or steep. It then updates the cursor's 
+ * position to that of (x1, y1).
  */
 void plotLine(int x0, int y0, int x1, int y1) {
   if (abs(y1 - y0) < abs(x1 - x0)) {

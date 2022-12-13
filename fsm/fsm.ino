@@ -38,6 +38,7 @@ void loop() {
 }
 
 state update_fsm(state curState, String msg){
+  // next state will be the current state unless a transition is made
   state nextState = curState;
   switch(curState) {
     case sWAITING:
@@ -63,9 +64,8 @@ state update_fsm(state curState, String msg){
       if (msg.charAt(0) == 'S' && msg.charAt(1) == 'D') { // transition 3-4 
         // set the output
         enableWatchdog();
-        int spaceDelim = msg.indexOf(" ");
         // update variables
-        totalLinesToDraw = msg.substring(spaceDelim + 1).toInt();
+        totalLinesToDraw = msg.substring(msg.indexOf(" ") + 1).toInt();
         phaseSize = totalLinesToDraw / 2; 
         incrementSize = 255 / phaseSize;
         // transition to next state
@@ -90,6 +90,7 @@ state update_fsm(state curState, String msg){
       if (totalLinesProcessed == totalLinesToDraw) { // transition 5-1
         // set the output
         disableWatchdog();
+        updateProgressBar();
         // transition to next state
         nextState = sWAITING;
       } else if (cursorX == latestX && cursorY == latestY && totalLinesProcessed != totalLinesToDraw) { // transition 5-6
