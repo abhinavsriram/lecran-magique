@@ -12,6 +12,25 @@ void initializeSystem() {
 }
 
 /*
+ * void initializeStateVariables() initializes all the variables
+ * needed for the FSM.
+ */
+void initializeStateVariables() {
+  CURRENT_STATE = sWAITING;
+  for (int i = 0; i < 255; i++) {
+    lineInstructionsBuffer[i] = {0, 0};
+  }
+  readPointer = 0;
+  writePointer = 0;
+  totalLinesToDraw = 0;
+  totalLinesProcessed = 1;
+  cursorX = 0;
+  cursorY = 0;
+  latestX = 0;
+  latestY = 0;
+}
+
+/*
  * void updateProgressBar() updates the luminosity of the progress bar 
  * LEDs using PWM. The first LED lights up with increasing luminosity up 
  * to the first 50% of drawing progress, after which the second LED starts 
@@ -260,3 +279,30 @@ void plotLine(int x0, int y0, int x1, int y1) {
   cursorX = x1;
   cursorY = y1;
 }
+
+#ifndef TESTING
+void testing_state_edit() { }
+ 
+#else
+void testing_state_edit() {
+  CURRENT_STATE = sWAITING;
+  for (int i = 0; i < 255; i++) {
+    lineInstructionsBuffer[i] = {0, 0};
+  }
+  // both -
+  lineInstructionsBuffer[0] = extractLineInstruction("SL 30 30");
+  lineInstructionsBuffer[1] = extractLineInstruction("SL 20 10");
+  // both +
+  lineInstructionsBuffer[2] = extractLineInstruction("SL 30 40");
+  lineInstructionsBuffer[3] = extractLineInstruction("SL 50 50");
+  // + x, - y
+  lineInstructionsBuffer[4] = extractLineInstruction("SL 50 50");
+  lineInstructionsBuffer[5] = extractLineInstruction("SL 60 30");
+  // - x, - y
+  lineInstructionsBuffer[6] = extractLineInstruction("SL 50 50");
+  lineInstructionsBuffer[7] = extractLineInstruction("SL 30 60");
+  Serial.println("Buffer prints");
+  Serial.println(lineInstructionsBuffer[0].xCoord);
+  Serial.println(lineInstructionsBuffer[1].xCoord);
+}
+#endif

@@ -51,6 +51,7 @@ int incrementSize;
  * Setup functions.
  */
 void initializeSystem();
+void initializeStateVariables();
 
 /*
  * ISR.
@@ -82,3 +83,10 @@ lineInstruction extractLineInstruction(String msg);
 void plotLine(int x0, int y0, int x1, int y1);
 void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
+
+/*
+ * Testing.
+ */
+#define TESTING
+bool test_all_tests();
+bool test_transition(state start_state, state end_state, state_inputs test_state_inputs, state_vars start_state_vars, state_vars end_state_vars, bool verbos);

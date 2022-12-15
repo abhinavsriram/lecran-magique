@@ -12,29 +12,19 @@ void setup() {
   while(!Serial);
   initializeSystem();
   // initialize all FSM variables
-  CURRENT_STATE = sWAITING;
-  for (int i = 0; i < 255; i++) {
-    lineInstructionsBuffer[i] = {0, 0};
-  }
-  readPointer = 0;
-  writePointer = 0;
-  totalLinesToDraw = 0;
-  totalLinesProcessed = 1;
-  cursorX = 0;
-  cursorY = 0;
-  latestX = 0;
-  latestY = 0;
+  initializeStateVariables();
+  test_all_tests();
 }
 
 void loop() {
-  // read in messages received via Serial
-  msg = "";
-  while (Serial.available()) {
-   msg += char(Serial.read());
-  }
-  // pass those messages as input to FSM
-  CURRENT_STATE = update_fsm(CURRENT_STATE, msg);
-  delay(10);
+//  // read in messages received via Serial
+//  msg = "";
+//  while (Serial.available()) {
+//   msg += char(Serial.read());
+//  }
+//  // pass those messages as input to FSM
+//  CURRENT_STATE = update_fsm(CURRENT_STATE, msg);
+//  delay(10);
 }
 
 state update_fsm(state curState, String msg){
