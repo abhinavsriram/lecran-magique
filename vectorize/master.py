@@ -16,7 +16,7 @@ if __name__ == "__main__":
     image_source = sys.argv[1]
     random_file_name_prefix = ''.join(random.choices(string.ascii_lowercase, k=5))
     print(random_file_name_prefix)
-    image_file_type = ".jpeg"
+    image_file_type = ".png"
     image_file_name = random_file_name_prefix + image_file_type
     retrieve_image(image_source, image_file_name)
     input_file_path = image_file_name

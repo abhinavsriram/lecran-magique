@@ -1,23 +1,3 @@
-typedef struct {
-  String msg;
-} state_inputs;
-
-/*
- * Define struct to keep all 9 state variables in one place.
- */
-typedef struct { 
-  // buffer only has lineInstructions, for testing, just check readPointer and writePointer 
-  // lineInstruction lineInstructionsBuffer[255];
-  int readPointer; 
-  int writePointer;
-  int totalLinesProcessed;
-  int totalLinesToDraw;
-  int cursorX;
-  int cursorY; 
-  int latestX;
-  int latestY;
-} state_vars;
-
 /*        
  * Helper function for printing states.
  */
@@ -41,13 +21,13 @@ char* s2str(state s) {
 }
 
 /*
- * Given a start state, inputs, and starting values for state variables, tests that
- * update_fsm returns the correct end state and updates the state variables correctly
- * returns true if this is the case (test passed) and false otherwise (test failed)
+ * Given a start state, inputs, and starting values for state 
+ * variables, tests that update_fsm returns the correct end state 
+ * and updates the state variables correctly returns true if this 
+ * is the case (test passed) and false otherwise (test failed).
  * 
  * Need to use "verbos" instead of "verbose" because verbose is apparently a keyword
  */
-// FIX, SPECIFIERS IN PRINTLINES
 bool test_transition(state start_state, state end_state, state_inputs test_state_inputs, state_vars start_state_vars, state_vars end_state_vars, bool verbos) {
   readPointer= start_state_vars.readPointer;
   writePointer = start_state_vars.writePointer;
@@ -87,7 +67,7 @@ bool test_transition(state start_state, state end_state, state_inputs test_state
     Serial.println(s_to_print);
     sprintf(s_to_print, "expected:  %2d | %5d | %3d | %3d | %5d | %9d | %11d | %9d", end_state_vars.readPointer, end_state_vars.writePointer, end_state_vars.totalLinesProcessed, end_state_vars.totalLinesToDraw, end_state_vars.cursorX, end_state_vars.cursorY, end_state_vars.latestX, end_state_vars.latestY);
     Serial.println(s_to_print);
-    sprintf(s_to_print, "actual:   %2d | %5d | %3d | %3d | %5d | %9d | %11d | %9d", readPointer, writePointer, totalLinesProcessed, totalLinesToDraw, cursorX, cursorY, latestX, latestY);
+    sprintf(s_to_print, "actual:    %2d | %5d | %3d | %3d | %5d | %9d | %11d | %9d", readPointer, writePointer, totalLinesProcessed, totalLinesToDraw, cursorX, cursorY, latestX, latestY);
     Serial.println(s_to_print);
     return false;
   }
@@ -100,6 +80,11 @@ const state_vars test_in_vars[10] = {{0, 0, 1, 0, 0, 0, 0, 0},  {0, 0, 1, 0, 0 ,
 const state_vars test_out_vars[10] = {{0, 0, 1, 0, 0 , 0, 0, 0}, {0, 0, 1, 0, 0 , 0, 0, 0}, {0, 0, 1, 200, 0, 0, 0, 0}, {0, 1, 2, 50, 0, 0, 0, 0}, {0, 0, 87, 87, 6, 0, 5, 10}, {4, 4, 11, 20, 10, 10, 10,10}, {2, 2, 10, 20, 20, 10, 20, 10}, {4, 4, 10, 20, 50, 50, 50, 50},  {6, 6, 10, 20, 60, 30, 60, 30},  {8, 8, 10, 20, 30, 60, 30, 60}};
 const int num_tests = 10;
 
+#ifndef TESTING
+void testing_state_edit() { }
+bool test_all_tests() { }
+ 
+#else
 /*
  * Runs through all the test cases defined above.
  */
@@ -115,3 +100,30 @@ bool test_all_tests() {
   Serial.println("All tests passed!");
   return true;
 }
+
+/*
+ * Loads the lineInstructionBuffer with predetermined 
+ * values for the first 8 indices. 
+ */
+void testing_state_edit() {
+  CURRENT_STATE = sWAITING;
+  for (int i = 0; i < 255; i++) {
+    lineInstructionsBuffer[i] = {0, 0};
+  }
+  // both -
+  lineInstructionsBuffer[0] = extractLineInstruction("SL 30 30");
+  lineInstructionsBuffer[1] = extractLineInstruction("SL 20 10");
+  // both +
+  lineInstructionsBuffer[2] = extractLineInstruction("SL 30 40");
+  lineInstructionsBuffer[3] = extractLineInstruction("SL 50 50");
+  // + x, - y
+  lineInstructionsBuffer[4] = extractLineInstruction("SL 50 50");
+  lineInstructionsBuffer[5] = extractLineInstruction("SL 60 30");
+  // - x, - y
+  lineInstructionsBuffer[6] = extractLineInstruction("SL 50 50");
+  lineInstructionsBuffer[7] = extractLineInstruction("SL 30 60");
+  Serial.println("Buffer prints");
+  Serial.println(lineInstructionsBuffer[0].xCoord);
+  Serial.println(lineInstructionsBuffer[1].xCoord);
+}
+#endif

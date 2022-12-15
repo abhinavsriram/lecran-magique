@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from "react";
 
 // OPEN AI config values to make API calls to DALL·E
 import { Configuration, OpenAIApi } from "openai";
-const OPENAI_API_KEY = "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";
+const OPENAI_API_KEY = "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";
 const configuration = new Configuration({
   apiKey: OPENAI_API_KEY,
 });
@@ -263,9 +263,9 @@ export function EtchPanel(props) {
         arduinoInstructions.push(
           "SL" +
             " " +
-            Math.round(props.imagePoints[i][0] * 0.5) +
+            Math.round(props.imagePoints[i][0] * 0.25) +
             " " +
-            Math.round(props.imagePoints[i][1] * 0.5)
+            Math.round(props.imagePoints[i][1] * 0.25)
         );
       }
     }
@@ -285,6 +285,7 @@ export function EtchPanel(props) {
       //     size: "256x256",
       //   });
       //   const image_url = response.data.data[0].url;
+      //   console.log(image_url);
       //   props.socket.send("PY " + image_url);
       // } catch (error) {
       //   if (error.response) {
@@ -295,10 +296,10 @@ export function EtchPanel(props) {
       //   }
       // }
       // test:
-      const image_url =
-        "https://cdn.shopify.com/s/files/1/0590/3305/9479/files/cup_of_coffee_for_websites_256x256_crop_center.jpg?v=1630283140";
-      props.socket.send("PY " + image_url);
-      setWorkingPopUp(true);
+      // test constant url: https://cdn.shopify.com/s/files/1/0590/3305/9479/files/cup_of_coffee_for_websites_256x256_crop_center.jpg?v=1630283140
+      // const image_url = "https://picsum.photos/256/256";
+      // props.socket.send("PY " + image_url);
+      // setWorkingPopUp(true);
     }
   };
 

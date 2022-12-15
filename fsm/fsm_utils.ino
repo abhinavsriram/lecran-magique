@@ -103,7 +103,8 @@ void enableWatchdog() {
 
 /*
  * void disableWatchdog() sets necessary bits in specific registers 
- * to disable the Watchdog.
+ * to disable the Watchdog. The Watchdog is disabled upon returning
+ * to the sWAITING state or upon the ISR being triggered.
  */
 void disableWatchdog() {
   WDT->CTRL.reg = 0;
@@ -279,30 +280,3 @@ void plotLine(int x0, int y0, int x1, int y1) {
   cursorX = x1;
   cursorY = y1;
 }
-
-#ifndef TESTING
-void testing_state_edit() { }
- 
-#else
-void testing_state_edit() {
-  CURRENT_STATE = sWAITING;
-  for (int i = 0; i < 255; i++) {
-    lineInstructionsBuffer[i] = {0, 0};
-  }
-  // both -
-  lineInstructionsBuffer[0] = extractLineInstruction("SL 30 30");
-  lineInstructionsBuffer[1] = extractLineInstruction("SL 20 10");
-  // both +
-  lineInstructionsBuffer[2] = extractLineInstruction("SL 30 40");
-  lineInstructionsBuffer[3] = extractLineInstruction("SL 50 50");
-  // + x, - y
-  lineInstructionsBuffer[4] = extractLineInstruction("SL 50 50");
-  lineInstructionsBuffer[5] = extractLineInstruction("SL 60 30");
-  // - x, - y
-  lineInstructionsBuffer[6] = extractLineInstruction("SL 50 50");
-  lineInstructionsBuffer[7] = extractLineInstruction("SL 30 60");
-  Serial.println("Buffer prints");
-  Serial.println(lineInstructionsBuffer[0].xCoord);
-  Serial.println(lineInstructionsBuffer[1].xCoord);
-}
-#endif

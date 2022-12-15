@@ -5,6 +5,8 @@ import argparse
 import perlin
 import cv2
 
+# modified version of linedraw.py from https://github.com/LingDong-/linedraw
+
 draw_contours = True
 draw_hatch = True
 show_bitmap = False

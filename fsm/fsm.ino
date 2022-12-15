@@ -17,19 +17,21 @@ void setup() {
 }
 
 void loop() {
-//  // read in messages received via Serial
-//  msg = "";
-//  while (Serial.available()) {
-//   msg += char(Serial.read());
-//  }
-//  // pass those messages as input to FSM
-//  CURRENT_STATE = update_fsm(CURRENT_STATE, msg);
-//  delay(10);
+  // comment out this entire block of code when testing
+  // read in messages received via Serial
+  msg = "";
+  while (Serial.available()) {
+   msg += char(Serial.read());
+  }
+  // pass those messages as input to FSM
+  CURRENT_STATE = update_fsm(CURRENT_STATE, msg);
+  delay(10);
 }
 
 state update_fsm(state curState, String msg){
   // next state will be the current state unless a transition is made
   state nextState = curState;
+  testing_state_edit();
   switch(curState) {
     case sWAITING:
       // check the guard

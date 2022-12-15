@@ -85,8 +85,32 @@ void plotLineLow(int x0, int y0, int x1, int y1);
 void plotLineHigh(int x0, int y0, int x1, int y1);
 
 /*
- * Testing.
+ * Define struct for input to FSM for testing.
+ */
+typedef struct {
+  String msg;
+} state_inputs;
+
+/*
+ * Define struct to keep all 9 state variables in one place for testing.
+ */
+typedef struct { 
+  // buffer only has lineInstructions, for testing, just check readPointer and writePointer 
+  // lineInstruction lineInstructionsBuffer[255];
+  int readPointer; 
+  int writePointer;
+  int totalLinesProcessed;
+  int totalLinesToDraw;
+  int cursorX;
+  int cursorY; 
+  int latestX;
+  int latestY;
+} state_vars;
+
+/*
+ * Testing helper functions.
  */
 #define TESTING
+char* s2str(state s);
 bool test_all_tests();
 bool test_transition(state start_state, state end_state, state_inputs test_state_inputs, state_vars start_state_vars, state_vars end_state_vars, bool verbos);
