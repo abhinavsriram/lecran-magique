@@ -12,13 +12,14 @@ const SERVER_PORT = 8081;
 // variable that represents the opened web socket
 const socket = new WebSocket("ws://localhost:" + SERVER_PORT);
 
+var testResponseTracker = ""; // tracks responses sent by Arduino for testing
+
 function App() {
   // STATE VARIABLES FOR BASE IMPLEMENTATION
   const [resetComplete, setResetComplete] = useState(false); // bool to track whether reset process is complete
   const [drawProgress, setDrawProgess] = useState(-1); // int to track number of lines plotted
   const [stopDrawing, setStopDrawing] = useState(false); // bool to track whether ISR was tripped to stop drawing
   const [watchdogTripped, setWatchdogTripped] = useState(false); // bool to track whether Watchdog was tripped
-  const [testResponseTracker, setTestResponseTracker] = useState("");
 
   // STATE VARIABLES FOR CAPSTONE
   const [originalImage, setOriginalImage] = useState(""); // original image file path
@@ -41,47 +42,66 @@ function App() {
       // AR: A - Arduino, R - Reset Status
       case "AR":
         setResetComplete(true);
-        setTestResponseTracker("AR");
+        testResponseTracker = "AR";
         break;
       // AD: A - Arduino, D - Draw Progress
       case "AD":
         setDrawProgess(parseInt(message));
-        setTestResponseTracker(String(data.data));
+        testResponseTracker = String(data.data);
         break;
       // AS: A - Arduino, S - Stop Motors
       case "AS":
         setStopDrawing(true);
-        setTestResponseTracker("AS");
+        testResponseTracker = "AS";
         break;
       // AW: A - Arduino, W - Watchdog Tripped
       case "AW":
         setWatchdogTripped(true);
-        setTestResponseTracker("AW");
+        testResponseTracker = "AW";
         break;
-      // testing a single successful drawing: Scenario 1
-      case "TEST1":
-        switch (message.toString) {
-          case "1":
+      // testing Scenario 1 from the Sequence Diagrams
+      case "TEST_SCENARIO_1":
+        switch (parseInt(message)) {
+          case 1:
+            // transition 1-2
             socket.send("SR");
-          case "2":
+            break;
+          case 2:
+            // transition 2-3
+            socket.send("");
+            break;
+          case 3:
+            // transition 3-4
             if (testResponseTracker === "AR") {
               socket.send("SD 2");
-              socket.send("SF 0 0");
             } else {
-              socket.send("TEST 1 FAILED");
+              socket.send("TEST_SCENARIO_1 Failed In Transition 3-4");
             }
-          case "3":
-            if (testResponseTracker === "AD 1") {
+            break;
+          case 4:
+            // transition 4-5
+            socket.send("SF 0 0");
+            break;
+          case 5:
+            // transition 5-6
+            socket.send("");
+            break;
+          case 6:
+            // transition 6-5
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AD0") {
               socket.send("SL 1 1");
             } else {
-              socket.send("TEST 1 FAILED");
+              socket.send("TEST_SCENARIO_1 Failed In Transition 6-5");
             }
-          case "4":
-            if (testResponseTracker === "AD 2") {
-              socket.send("TEST 1 PASSES");
+            break;
+          case 7:
+            // transition 5-1
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AD1") {
+              socket.send("TEST_SCENARIO_1 Passes");
             } else {
-              socket.send("TEST 1 FAILED");
+              socket.send("TEST_SCENARIO_1 Failed In Transition 5-1");
             }
+            break;
         }
         break;
       // IP: I - Image, P - Points

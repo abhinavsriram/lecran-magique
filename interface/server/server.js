@@ -106,6 +106,10 @@ function readFromWebSocket(data) {
       }
     }, 5000);
   }
+  // instruction "TESTING UPDATE" from integration tests
+  if (String(data)[0] === "T") {
+    console.log("TESTING UPDATE: " + data);
+  }
 }
 
 // send to Arduino

@@ -23,7 +23,7 @@ void initializeStateVariables() {
   readPointer = 0;
   writePointer = 0;
   totalLinesToDraw = 0;
-  totalLinesProcessed = 1;
+  totalLinesProcessed = 0;
   cursorX = 0;
   cursorY = 0;
   latestX = 0;
@@ -138,7 +138,7 @@ void resetSystem() {
   readPointer = 0;
   writePointer = 0;
   totalLinesToDraw = 0;
-  totalLinesProcessed = 1;
+  totalLinesProcessed = 0;
   cursorX = 0;
   cursorY = 0;
   latestX = 0;

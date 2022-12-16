@@ -22,7 +22,7 @@ char* s2str(state s) {
 
 /*
  * Given a start state, inputs, and starting values for state 
- * variables, tests that update_fsm returns the correct end state 
+ * variables, tests that updateFSM returns the correct end state 
  * and updates the state variables correctly returns true if this 
  * is the case (test passed) and false otherwise (test failed).
  * 
@@ -37,7 +37,7 @@ bool test_transition(state start_state, state end_state, state_inputs test_state
   cursorY = start_state_vars.cursorY;
   latestX = start_state_vars.latestX;
   latestY = start_state_vars.latestY;
-  state result_state = update_fsm(start_state, test_state_inputs.msg);
+  state result_state = updateFSM(start_state, test_state_inputs.msg);
   bool passed_test = (end_state == result_state and
                       readPointer == end_state_vars.readPointer and
                       writePointer == end_state_vars.writePointer and
@@ -89,14 +89,29 @@ bool test_all_tests() { }
  * Runs through all the test cases defined above.
  */
 bool test_all_tests() {
-  for (int i = 0; i < num_tests; i++) {
-    Serial.print("Running test ");
-    Serial.println(i);
-    if (!test_transition(test_states_in[i], test_states_out[i], test_input[i], test_in_vars[i], test_out_vars[i], true)) {
-      return false;
+//  for (int i = 0; i < num_tests; i++) {
+//    Serial.print("Running test ");
+//    Serial.println(i);
+//    if (!test_transition(test_states_in[i], test_states_out[i], test_input[i], test_in_vars[i], test_out_vars[i], true)) {
+//      return false;
+//    }
+//    Serial.println();
+//  }
+  delay(5000);
+  state current_test_state = sWAITING; 
+  for (int j = 1; j < 8; j++) {
+    Serial.println("TEST_SCENARIO_1 " + String(j));
+    delay(100);
+    String test_msg = "";
+    while (Serial.available()) {
+      test_msg += char(Serial.read());
     }
-    Serial.println();
-  } 
+    // pass those messages as input to FSM
+    Serial.println("CURRENT_STATE: " + String(current_test_state));
+    Serial.println("MESSAGE: " + String(test_msg));
+    current_test_state = updateFSM(current_test_state, test_msg);
+    delay(100);
+  }
   Serial.println("All tests passed!");
   return true;
 }
@@ -106,24 +121,21 @@ bool test_all_tests() {
  * values for the first 8 indices. 
  */
 void testing_state_edit() {
-  CURRENT_STATE = sWAITING;
-  for (int i = 0; i < 255; i++) {
-    lineInstructionsBuffer[i] = {0, 0};
-  }
-  // both -
-  lineInstructionsBuffer[0] = extractLineInstruction("SL 30 30");
-  lineInstructionsBuffer[1] = extractLineInstruction("SL 20 10");
-  // both +
-  lineInstructionsBuffer[2] = extractLineInstruction("SL 30 40");
-  lineInstructionsBuffer[3] = extractLineInstruction("SL 50 50");
-  // + x, - y
-  lineInstructionsBuffer[4] = extractLineInstruction("SL 50 50");
-  lineInstructionsBuffer[5] = extractLineInstruction("SL 60 30");
-  // - x, - y
-  lineInstructionsBuffer[6] = extractLineInstruction("SL 50 50");
-  lineInstructionsBuffer[7] = extractLineInstruction("SL 30 60");
-  Serial.println("Buffer prints");
-  Serial.println(lineInstructionsBuffer[0].xCoord);
-  Serial.println(lineInstructionsBuffer[1].xCoord);
+//  CURRENT_STATE = sWAITING;
+//  for (int i = 0; i < 255; i++) {
+//    lineInstructionsBuffer[i] = {0, 0};
+//  }
+//  // both -
+//  lineInstructionsBuffer[0] = extractLineInstruction("SL 30 30");
+//  lineInstructionsBuffer[1] = extractLineInstruction("SL 20 10");
+//  // both +
+//  lineInstructionsBuffer[2] = extractLineInstruction("SL 30 40");
+//  lineInstructionsBuffer[3] = extractLineInstruction("SL 50 50");
+//  // + x, - y
+//  lineInstructionsBuffer[4] = extractLineInstruction("SL 50 50");
+//  lineInstructionsBuffer[5] = extractLineInstruction("SL 60 30");
+//  // - x, - y
+//  lineInstructionsBuffer[6] = extractLineInstruction("SL 50 50");
+//  lineInstructionsBuffer[7] = extractLineInstruction("SL 30 60");
 }
 #endif
