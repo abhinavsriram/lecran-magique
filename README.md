@@ -1,4 +1,4 @@
-# README: An Automated L'Écran Magique
+# README
 
 ## Running The Client
 
