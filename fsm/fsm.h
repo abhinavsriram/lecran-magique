@@ -110,7 +110,9 @@ typedef struct {
 /*
  * Testing helper functions.
  */
-#define TESTING
+//#define UNIT_TESTING
+#define INTEGRATION_TESTING
 char* s2str(state s);
-bool test_all_tests();
+bool test_all_unit_tests();
 bool test_transition(state start_state, state end_state, state_inputs test_state_inputs, state_vars start_state_vars, state_vars end_state_vars, bool verbos);
+void test_all_integration_tests();

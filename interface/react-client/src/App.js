@@ -60,7 +60,7 @@ function App() {
         testResponseTracker = "AW";
         break;
       // testing Scenario 1 from the Sequence Diagrams
-      case "TEST_SCENARIO_1":
+      case "INTEGRATION_TEST_SCENARIO_1":
         switch (parseInt(message)) {
           case 1:
             // transition 1-2
@@ -75,7 +75,9 @@ function App() {
             if (testResponseTracker === "AR") {
               socket.send("SD 2");
             } else {
-              socket.send("TEST_SCENARIO_1 Failed In Transition 3-4");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_1 Failed In Transition 3-4"
+              );
             }
             break;
           case 4:
@@ -88,20 +90,29 @@ function App() {
             break;
           case 6:
             // transition 6-5
-            if (testResponseTracker.replaceAll(/\s/g, "") == "AD0") {
+            if (testResponseTracker.replaceAll(/\s/g, "") === "AD0") {
               socket.send("SL 1 1");
             } else {
-              socket.send("TEST_SCENARIO_1 Failed In Transition 6-5");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_1 Failed In Transition 6-5"
+              );
             }
             break;
           case 7:
             // transition 5-1
-            if (testResponseTracker.replaceAll(/\s/g, "") == "AD1") {
-              socket.send("TEST_SCENARIO_1 Passes");
+            if (testResponseTracker.replaceAll(/\s/g, "") === "AD1") {
+              socket.send("INTEGRATION_TEST_SCENARIO_1 Passes");
             } else {
-              socket.send("TEST_SCENARIO_1 Failed In Transition 5-1");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_1 Failed In Transition 5-1"
+              );
             }
             break;
+          default:
+            // error case
+            socket.send(
+              "INTEGRATION_TEST_SCENARIO_1 Fails Due To Not Following Message Protocol"
+            );
         }
         break;
       // IP: I - Image, P - Points

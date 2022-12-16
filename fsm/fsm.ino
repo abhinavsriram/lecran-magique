@@ -13,7 +13,10 @@ void setup() {
   initializeSystem();
   // initialize all FSM variables
   initializeStateVariables();
-  test_all_tests();
+  // mock function that does nothing unless UNIT_TESTING is enabled
+  test_all_unit_tests();
+  // mock function that does nothing unless INTEGRATION_TESTING is enabled
+  test_all_integration_tests();
 }
 
 void loop() {
@@ -29,12 +32,12 @@ void loop() {
 }
 
 state updateFSM(state curState, String msg){
-  Serial.println("processed: " + String(totalLinesProcessed));
   // next state will be the current state unless a transition is made
   state nextState = curState;
+  // mock function that does nothing unless UNIT_TESTING is enabled
   testing_state_edit();
-  Serial.println("CURRENT_STATE within FSM: " + String(curState));
-  Serial.println("MESSAGE within FSM: " + String(msg));
+//  Serial.println("CURRENT_STATE within FSM: " + String(curState));
+//  Serial.println("MESSAGE within FSM: " + String(msg));
   switch(curState) {
     case sWAITING:
       // check the guard
