@@ -38,9 +38,9 @@ function readFromSerial(data) {
     "SERVER UPDATE: Data Received From Arduino (via " + sp.path + "): " + data
   );
   if (connections.length > 0) {
-    console.log(
-      "SERVER UPDATE: Broadcasting Data To All Websocket Connections."
-    );
+    // console.log(
+    //   "SERVER UPDATE: Broadcasting Data To All Websocket Connections."
+    // );
     broadcastToClient(data); // broadcast data to all websocket connections
   }
 }
@@ -106,9 +106,9 @@ function readFromWebSocket(data) {
       }
     }, 5000);
   }
-  // instruction "TESTING UPDATE" from integration tests
-  if (String(data)[0] === "T") {
-    console.log("TESTING UPDATE: " + data);
+  // any integration test related updates/messages
+  if (String(data)[0] === "I") {
+    console.log("INTEGRATION TESTING UPDATE: " + data);
   }
 }
 

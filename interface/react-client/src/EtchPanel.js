@@ -277,24 +277,24 @@ export function EtchPanel(props) {
       setPromptPopUp(true);
     } else {
       // prod:
-      // setWorkingPopUp(true);
-      // try {
-      //   const response = await openai.createImage({
-      //     prompt: prompt,
-      //     n: 1,
-      //     size: "256x256",
-      //   });
-      //   const image_url = response.data.data[0].url;
-      //   console.log(image_url);
-      //   props.socket.send("PY " + image_url);
-      // } catch (error) {
-      //   if (error.response) {
-      //     console.log(error.response.status);
-      //     console.log(error.response.data);
-      //   } else {
-      //     console.log(error.message);
-      //   }
-      // }
+      setWorkingPopUp(true);
+      try {
+        const response = await openai.createImage({
+          prompt: prompt,
+          n: 1,
+          size: "256x256",
+        });
+        const image_url = response.data.data[0].url;
+        console.log(image_url);
+        props.socket.send("PY " + image_url);
+      } catch (error) {
+        if (error.response) {
+          console.log(error.response.status);
+          console.log(error.response.data);
+        } else {
+          console.log(error.message);
+        }
+      }
       // test:
       // test constant url: https://cdn.shopify.com/s/files/1/0590/3305/9479/files/cup_of_coffee_for_websites_256x256_crop_center.jpg?v=1630283140
       // const image_url = "https://picsum.photos/256/256";

@@ -76,44 +76,28 @@ bool test_transition(state start_state, state end_state, state_inputs test_state
 const state test_states_in[10] = {(state) 1, (state) 2, (state) 3, (state) 4, (state) 5, (state) 6, (state) 5, (state) 5, (state) 5, (state) 5};
 const state test_states_out[10] = {(state) 2, (state) 3, (state) 4, (state) 5, (state) 1, (state) 5, (state) 6, (state) 6, (state) 6, (state) 6};
 const state_inputs test_input[10] = {{"SR"},{},{"SD 200"},{"SF 0 0"},{}, {"SL 20 20"}, {}, {}, {}, {}};
-const state_vars test_in_vars[10] = {{0, 0, 1, 0, 0, 0, 0, 0},  {0, 0, 1, 0, 0 , 0, 0, 0},  {0, 0, 1, 0, 0, 0, 0, 0},  {0, 0, 1, 50, 0, 0, 0, 0}, {0, 0, 87, 87, 6, 0, 5, 10}, {4, 3, 10, 20, 10, 10, 10, 10}, {1, 2, 10, 20, 30, 30, 30, 30}, {3, 4, 10, 20, 30, 40, 30, 40},  {5, 6, 10, 20, 50, 50, 50, 50}, {7, 8, 10, 20, 50, 50, 50, 50}};
-const state_vars test_out_vars[10] = {{0, 0, 1, 0, 0 , 0, 0, 0}, {0, 0, 1, 0, 0 , 0, 0, 0}, {0, 0, 1, 200, 0, 0, 0, 0}, {0, 1, 2, 50, 0, 0, 0, 0}, {0, 0, 87, 87, 6, 0, 5, 10}, {4, 4, 11, 20, 10, 10, 10,10}, {2, 2, 10, 20, 20, 10, 20, 10}, {4, 4, 10, 20, 50, 50, 50, 50},  {6, 6, 10, 20, 60, 30, 60, 30},  {8, 8, 10, 20, 30, 60, 30, 60}};
+const state_vars test_in_vars[10] = {{0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 0, 0 , 0, 0, 0},  {0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 50, 0, 0, 0, 0}, {0, 0, 87, 87, 6, 0, 5, 10}, {4, 3, 10, 20, 10, 10, 10, 10}, {1, 2, 10, 20, 30, 30, 30, 30}, {3, 4, 10, 20, 30, 40, 30, 40},  {5, 6, 10, 20, 50, 50, 50, 50}, {7, 8, 10, 20, 50, 50, 50, 50}};
+const state_vars test_out_vars[10] = {{0, 0, 0, 0, 0 , 0, 0, 0}, {0, 0, 0, 0, 0 , 0, 0, 0}, {0, 0, 0, 200, 0, 0, 0, 0}, {0, 1, 1, 50, 0, 0, 0, 0}, {0, 0, 87, 87, 6, 0, 5, 10}, {4, 4, 11, 20, 10, 10, 10,10}, {2, 2, 10, 20, 20, 10, 20, 10}, {4, 4, 10, 20, 50, 50, 50, 50},  {6, 6, 10, 20, 60, 30, 60, 30},  {8, 8, 10, 20, 30, 60, 30, 60}};
 const int num_tests = 10;
 
-#ifndef TESTING
+#ifndef UNIT_TESTING
 void testing_state_edit() { }
-bool test_all_tests() { }
+bool test_all_unit_tests() { }
  
 #else
 /*
  * Runs through all the test cases defined above.
  */
-bool test_all_tests() {
-//  for (int i = 0; i < num_tests; i++) {
-//    Serial.print("Running test ");
-//    Serial.println(i);
-//    if (!test_transition(test_states_in[i], test_states_out[i], test_input[i], test_in_vars[i], test_out_vars[i], true)) {
-//      return false;
-//    }
-//    Serial.println();
-//  }
-  delay(5000);
-  state current_test_state = sWAITING; 
-  for (int j = 1; j < 8; j++) {
-    Serial.println("TEST_SCENARIO_1 " + String(j));
-    delay(100);
-    String test_msg = "";
-    while (Serial.available()) {
-      test_msg += char(Serial.read());
+bool test_all_unit_tests() {
+  for (int i = 0; i < num_tests; i++) {
+    Serial.print("Running test ");
+    Serial.println(i);
+    if (!test_transition(test_states_in[i], test_states_out[i], test_input[i], test_in_vars[i], test_out_vars[i], true)) {
+      return false;
     }
-    // pass those messages as input to FSM
-    Serial.println("CURRENT_STATE: " + String(current_test_state));
-    Serial.println("MESSAGE: " + String(test_msg));
-    current_test_state = updateFSM(current_test_state, test_msg);
-    delay(100);
+    Serial.println();
   }
-  Serial.println("All tests passed!");
-  return true;
+  Serial.println("All unit tests passed!");
 }
 
 /*
@@ -121,21 +105,49 @@ bool test_all_tests() {
  * values for the first 8 indices. 
  */
 void testing_state_edit() {
-//  CURRENT_STATE = sWAITING;
-//  for (int i = 0; i < 255; i++) {
-//    lineInstructionsBuffer[i] = {0, 0};
-//  }
-//  // both -
-//  lineInstructionsBuffer[0] = extractLineInstruction("SL 30 30");
-//  lineInstructionsBuffer[1] = extractLineInstruction("SL 20 10");
-//  // both +
-//  lineInstructionsBuffer[2] = extractLineInstruction("SL 30 40");
-//  lineInstructionsBuffer[3] = extractLineInstruction("SL 50 50");
-//  // + x, - y
-//  lineInstructionsBuffer[4] = extractLineInstruction("SL 50 50");
-//  lineInstructionsBuffer[5] = extractLineInstruction("SL 60 30");
-//  // - x, - y
-//  lineInstructionsBuffer[6] = extractLineInstruction("SL 50 50");
-//  lineInstructionsBuffer[7] = extractLineInstruction("SL 30 60");
+  CURRENT_STATE = sWAITING;
+  for (int i = 0; i < 255; i++) {
+    lineInstructionsBuffer[i] = {0, 0};
+  }
+  // both -
+  lineInstructionsBuffer[0] = extractLineInstruction("SL 30 30");
+  lineInstructionsBuffer[1] = extractLineInstruction("SL 20 10");
+  // both +
+  lineInstructionsBuffer[2] = extractLineInstruction("SL 30 40");
+  lineInstructionsBuffer[3] = extractLineInstruction("SL 50 50");
+  // + x, - y
+  lineInstructionsBuffer[4] = extractLineInstruction("SL 50 50");
+  lineInstructionsBuffer[5] = extractLineInstruction("SL 60 30");
+  // - x, - y
+  lineInstructionsBuffer[6] = extractLineInstruction("SL 50 50");
+  lineInstructionsBuffer[7] = extractLineInstruction("SL 30 60");
+}
+#endif
+
+#ifndef INTEGRATION_TESTING
+void test_all_integration_tests() { }
+ 
+#else
+/*
+ * Runs through all the integration tests defined in App.js.
+ */
+void test_all_integration_tests() {
+  delay(5000);
+  Serial.println("Initiating Integration Tests");
+  Serial.println("Initiating INTEGRATION_TEST_SCENARIO_1");
+  state current_test_state = sWAITING; 
+  for (int j = 1; j < 8; j++) {
+    Serial.println("INTEGRATION_TEST_SCENARIO_1 " + String(j));
+    delay(500);
+    String test_msg = "";
+    while (Serial.available()) {
+      test_msg += char(Serial.read());
+    }
+//    Serial.println("CURRENT_STATE: " + String(current_test_state));
+//    Serial.println("MESSAGE: " + String(test_msg));
+    current_test_state = updateFSM(current_test_state, test_msg);
+    delay(500);
+  }
+  Serial.println("All integration tests passed!");
 }
 #endif

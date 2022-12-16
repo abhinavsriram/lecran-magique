@@ -75,7 +75,9 @@ function App() {
             if (testResponseTracker === "AR") {
               socket.send("SD 2");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_1 Failed In Transition 3-4");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_1 Failed In Transition 3-4"
+              );
             }
             break;
           case 4:
@@ -88,10 +90,12 @@ function App() {
             break;
           case 6:
             // transition 6-5
-            if (testResponseTracker.replaceAll(/\s/g, "") == "AD0") {
+            if (testResponseTracker.replaceAll(/\s/g, "") === "AD0") {
               socket.send("SL 1 1");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_1 Failed In Transition 6-5");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_1 Failed In Transition 6-5"
+              );
             }
             break;
           case 7:
@@ -297,6 +301,11 @@ function App() {
               socket.send("INTEGRATION_TEST_SCENARIO_4 Failed In Handling Watchdog");
             }
             break;
+          default:
+            // error case
+            socket.send(
+              "INTEGRATION_TEST_SCENARIO_1 Fails Due To Not Following Message Protocol"
+            );
         }
         break;
       // IP: I - Image, P - Points
