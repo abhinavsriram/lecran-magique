@@ -73,12 +73,12 @@ bool test_transition(state start_state, state end_state, state_inputs test_state
   }
 }
 
-const state test_states_in[10] = {(state) 1, (state) 2, (state) 3, (state) 4, (state) 5, (state) 6, (state) 5, (state) 5, (state) 5, (state) 5};
-const state test_states_out[10] = {(state) 2, (state) 3, (state) 4, (state) 5, (state) 1, (state) 5, (state) 6, (state) 6, (state) 6, (state) 6};
-const state_inputs test_input[10] = {{"SR"},{},{"SD 200"},{"SF 0 0"},{}, {"SL 20 20"}, {}, {}, {}, {}};
-const state_vars test_in_vars[10] = {{0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 0, 0 , 0, 0, 0},  {0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 50, 0, 0, 0, 0}, {0, 0, 87, 87, 6, 0, 5, 10}, {4, 3, 10, 20, 10, 10, 10, 10}, {1, 2, 10, 20, 30, 30, 30, 30}, {3, 4, 10, 20, 30, 40, 30, 40},  {5, 6, 10, 20, 50, 50, 50, 50}, {7, 8, 10, 20, 50, 50, 50, 50}};
-const state_vars test_out_vars[10] = {{0, 0, 0, 0, 0 , 0, 0, 0}, {0, 0, 0, 0, 0 , 0, 0, 0}, {0, 0, 0, 200, 0, 0, 0, 0}, {0, 1, 1, 50, 0, 0, 0, 0}, {0, 0, 87, 87, 6, 0, 5, 10}, {4, 4, 11, 20, 10, 10, 10,10}, {2, 2, 10, 20, 20, 10, 20, 10}, {4, 4, 10, 20, 50, 50, 50, 50},  {6, 6, 10, 20, 60, 30, 60, 30},  {8, 8, 10, 20, 30, 60, 30, 60}};
-const int num_tests = 10;
+const state test_states_in[17] = {(state) 1, (state) 2, (state) 3, (state) 4, (state) 5, (state) 6, (state) 5, (state) 5, (state) 5, (state) 5, (state) 5, (state) 1, (state) 2, (state) 3, (state) 4, (state) 5, (state) 6};
+const state test_states_out[17] = {(state) 2, (state) 3, (state) 4, (state) 5, (state) 1, (state) 5, (state) 6, (state) 6, (state) 6, (state) 6, (state) 6, (state) 1, (state) 2, (state) 3, (state) 4, (state) 5, (state) 6};
+const state_inputs test_input[17] = {{"SR"}, {}, {"SD 200"}, {"SF 0 0"}, {}, {"SL 20 20"}, {}, {}, {}, {}, {}, {}, {}, {"SF"}, {"SD 10"}, {}, {"SF"}};
+const state_vars test_in_vars[17] = {{0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 0, 0 , 0, 0, 0},  {0, 0, 0, 0, 0, 0, 0, 0},  {0, 0, 0, 50, 0, 0, 0, 0}, {0, 0, 87, 87, 6, 0, 5, 10}, {4, 3, 10, 20, 10, 10, 10, 10}, {1, 2, 10, 20, 30, 30, 30, 30}, {3, 4, 10, 20, 30, 40, 30, 40}, {5, 6, 10, 20, 50, 50, 50, 50}, {7, 8, 10, 20, 50, 50, 50, 50}, {9, 10, 5, 7, 10, 10, 10, 10}, {0, 0, 1, 0, 0, 0, 0, 0}, {0, 0, 1, 50, 4, 4, 0, 0}, {0, 0, 1, 50, 0, 0, 0, 0}, {0, 0, 1, 50, 0, 0, 0, 0}, {0, 0, 1, 50, 4, 4, 0, 0}, {0, 0, 1, 50, 0, 0, 0, 0}};
+const state_vars test_out_vars[17] = {{0, 0, 0, 0, 0 , 0, 0, 0}, {0, 0, 0, 0, 0 , 0, 0, 0}, {0, 0, 0, 200, 0, 0, 0, 0}, {0, 1, 1, 50, 0, 0, 0, 0}, {0, 0, 87, 87, 6, 0, 5, 10}, {4, 4, 11, 20, 10, 10, 10,10}, {2, 2, 10, 20, 20, 10, 20, 10}, {4, 4, 10, 20, 50, 50, 50, 50}, {6, 6, 10, 20, 60, 30, 60, 30}, {8, 8, 10, 20, 30, 60, 30, 60}, {10, 10, 5, 7, 30, 60, 30, 60}, {0, 0, 1, 0, 0, 0, 0, 0}, {0, 0, 1, 50, 4, 4, 0, 0}, {0, 0, 1, 50, 0, 0, 0, 0}, {0, 0, 1, 50, 0, 0, 0, 0}, {0, 0, 1, 50, 4, 4, 0, 0}, {0, 0, 1, 50, 0, 0, 0, 0}};
+const int num_tests = 17;
 
 #ifndef UNIT_TESTING
 void testing_state_edit() { }
@@ -102,7 +102,7 @@ bool test_all_unit_tests() {
 
 /*
  * Loads the lineInstructionBuffer with predetermined 
- * values for the first 8 indices. 
+ * values for the first 10 indices. 
  */
 void testing_state_edit() {
   CURRENT_STATE = sWAITING;
@@ -115,12 +115,14 @@ void testing_state_edit() {
   // both +
   lineInstructionsBuffer[2] = extractLineInstruction("SL 30 40");
   lineInstructionsBuffer[3] = extractLineInstruction("SL 50 50");
-  // + x, - y
+  // + x, - y, plotlineLow
   lineInstructionsBuffer[4] = extractLineInstruction("SL 50 50");
   lineInstructionsBuffer[5] = extractLineInstruction("SL 60 30");
-  // - x, - y
+  // - x, - y, plotlineHigh
   lineInstructionsBuffer[6] = extractLineInstruction("SL 50 50");
   lineInstructionsBuffer[7] = extractLineInstruction("SL 30 60");
+  lineInstructionsBuffer[8] = extractLineInstruction("SL 10 10");
+  lineInstructionsBuffer[9] = extractLineInstruction("SL 30 60");
 }
 #endif
 
@@ -132,10 +134,20 @@ void test_all_integration_tests() { }
  * Runs through all the integration tests defined in App.js.
  */
 void test_all_integration_tests() {
-  delay(5000);
+  delay(10000);
   Serial.println("Initiating Integration Tests");
-  Serial.println("Initiating INTEGRATION_TEST_SCENARIO_1");
-  state current_test_state = sWAITING; 
+  integration_test_scenario_1();
+  integration_test_scenario_2();
+  integration_test_scenario_3();
+  integration_test_scenario_4();
+}
+
+/*
+ * Testing Scenario 1 from the Sequence Diagrams.
+ */
+void integration_test_scenario_1() {
+  Serial.println("Starting INTEGRATION_TEST_SCENARIO_1");
+  CURRENT_STATE = sWAITING; 
   for (int j = 1; j < 8; j++) {
     Serial.println("INTEGRATION_TEST_SCENARIO_1 " + String(j));
     delay(500);
@@ -143,11 +155,72 @@ void test_all_integration_tests() {
     while (Serial.available()) {
       test_msg += char(Serial.read());
     }
-//    Serial.println("CURRENT_STATE: " + String(current_test_state));
-//    Serial.println("MESSAGE: " + String(test_msg));
-    current_test_state = updateFSM(current_test_state, test_msg);
+    CURRENT_STATE = updateFSM(CURRENT_STATE, test_msg);
     delay(500);
   }
-  Serial.println("All integration tests passed!");
+}
+
+/*
+ * Testing Scenario 2 from the Sequence Diagrams.
+ */
+void integration_test_scenario_2() {
+  Serial.println("Starting INTEGRATION_TEST_SCENARIO_2");
+  CURRENT_STATE = sWAITING; 
+  for (int j = 1; j < 15; j++) {
+    Serial.println("INTEGRATION_TEST_SCENARIO_2 " + String(j));
+    delay(500);
+    String test_msg = "";
+    while (Serial.available()) {
+      test_msg += char(Serial.read());
+    }
+    CURRENT_STATE = updateFSM(CURRENT_STATE, test_msg);
+    delay(500);
+  }
+}
+
+/*
+ * Testing Scenario 3 from the Sequence Diagrams.
+ */
+void integration_test_scenario_3() {
+  Serial.println("Starting INTEGRATION_TEST_SCENARIO_3");
+  CURRENT_STATE = sWAITING; 
+  for (int j = 1; j < 13; j++) {
+    Serial.println("INTEGRATION_TEST_SCENARIO_3 " + String(j));
+    delay(500);
+    String test_msg = "";
+    while (Serial.available()) {
+      test_msg += char(Serial.read());
+    }
+    CURRENT_STATE = updateFSM(CURRENT_STATE, test_msg);
+    if (j == 4) {
+      // we test if this was called correctly in case 5 in App.js
+      // hence we call it here after case 4
+      interruptServiceRoutine();
+    }
+    delay(500);
+  }
+}
+
+/*
+ * Testing Scenario 4 from the Sequence Diagrams.
+ */
+void integration_test_scenario_4() {
+  Serial.println("Starting INTEGRATION_TEST_SCENARIO_4");
+  CURRENT_STATE = sWAITING; 
+  for (int j = 1; j < 7; j++) {
+    Serial.println("INTEGRATION_TEST_SCENARIO_4 " + String(j));
+    delay(500);
+    String test_msg = "";
+    while (Serial.available()) {
+      test_msg += char(Serial.read());
+    }
+    CURRENT_STATE = updateFSM(CURRENT_STATE, test_msg);
+    if (j == 6) {
+      // we stop sending messages to the Arduino after case 5 in App.js
+      // so we wait for Watchdog to be tripped in case 6
+      delay(20000);
+    }
+    delay(500);
+  }
 }
 #endif

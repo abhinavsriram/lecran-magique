@@ -103,9 +103,16 @@ function App() {
             if (testResponseTracker.replaceAll(/\s/g, "") == "AD1") {
               socket.send("INTEGRATION_TEST_SCENARIO_1 Passes");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_1 Failed In Transition 5-1");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_1 Failed In Transition 5-1"
+              );
             }
             break;
+          default:
+            // error case
+            socket.send(
+              "INTEGRATION_TEST_SCENARIO_1 Fails Due To Not Following Message Protocol"
+            );
         }
         break;
       // testing Scenario 2 from the Sequence Diagrams
@@ -124,7 +131,9 @@ function App() {
             if (testResponseTracker === "AR") {
               socket.send("SD 2");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 3-4");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_2 Failed In Transition 3-4"
+              );
             }
             break;
           case 4:
@@ -140,15 +149,17 @@ function App() {
             if (testResponseTracker.replaceAll(/\s/g, "") == "AD0") {
               socket.send("SL 1 1");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 6-5");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_2 Failed In Transition 6-5"
+              );
             }
             break;
           case 7:
             // transition 5-1
-            if (testResponseTracker.replaceAll(/\s/g, "") == "AD1") {
-              socket.send("INTEGRATION_TEST_SCENARIO_2 Passes");
-            } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 5-1");
+            if (testResponseTracker.replaceAll(/\s/g, "") != "AD1") {
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_2 Failed In Transition 5-1"
+              );
             }
             break;
           case 8:
@@ -164,7 +175,9 @@ function App() {
             if (testResponseTracker === "AR") {
               socket.send("SD 2");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 3-4");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_2 Failed In Transition 3-4"
+              );
             }
             break;
           case 11:
@@ -180,7 +193,9 @@ function App() {
             if (testResponseTracker.replaceAll(/\s/g, "") == "AD0") {
               socket.send("SL 1 1");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 6-5");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_2 Failed In Transition 6-5"
+              );
             }
             break;
           case 14:
@@ -188,9 +203,16 @@ function App() {
             if (testResponseTracker.replaceAll(/\s/g, "") == "AD1") {
               socket.send("INTEGRATION_TEST_SCENARIO_2 Passes");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 5-1");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_2 Failed In Transition 5-1"
+              );
             }
             break;
+          default:
+            // error case
+            socket.send(
+              "INTEGRATION_TEST_SCENARIO_2 Fails Due To Not Following Message Protocol"
+            );
         }
         break;
       case "INTEGRATION_TEST_SCENARIO_3":
@@ -208,7 +230,9 @@ function App() {
             if (testResponseTracker === "AR") {
               socket.send("SD 2");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_3 Failed In Transition 3-4");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_3 Failed In Transition 3-4"
+              );
             }
             break;
           case 4:
@@ -217,7 +241,7 @@ function App() {
             break;
           case 5:
             // transition 5-6
-            if (testResponseTracker.replaceAll(/\s/g, "") == "AR") {
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AS") {
               socket.send("INTEGRATION_TEST_SCENARIO_3 Passed In Handling ISR");
             } else {
               socket.send("INTEGRATION_TEST_SCENARIO_3 Failed In Handling ISR");
@@ -236,7 +260,9 @@ function App() {
             if (testResponseTracker === "AR") {
               socket.send("SD 2");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_3 Failed In Transition 3-4");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_3 Failed In Transition 3-4"
+              );
             }
             break;
           case 9:
@@ -244,21 +270,34 @@ function App() {
             socket.send("SF 0 0");
             break;
           case 10:
+            // transition 5-6
+            socket.send("");
+            break;
+          case 11:
             // transition 6-5
             if (testResponseTracker.replaceAll(/\s/g, "") == "AD0") {
               socket.send("SL 1 1");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_3 Failed In Transition 6-5");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_3 Failed In Transition 6-5"
+              );
             }
             break;
-          case 11:
+          case 12:
             // transition 5-1
             if (testResponseTracker.replaceAll(/\s/g, "") == "AD1") {
               socket.send("INTEGRATION_TEST_SCENARIO_3 Passes");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_3 Failed In Transition 5-1");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_3 Failed In Transition 5-1"
+              );
             }
             break;
+          default:
+            // error case
+            socket.send(
+              "INTEGRATION_TEST_SCENARIO_3 Fails Due To Not Following Message Protocol"
+            );
         }
         break;
       case "INTEGRATION_TEST_SCENARIO_4":
@@ -276,7 +315,9 @@ function App() {
             if (testResponseTracker === "AR") {
               socket.send("SD 2");
             } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_4 Failed In Transition 3-4");
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_4 Failed In Transition 3-4"
+              );
             }
             break;
           case 4:
@@ -289,22 +330,29 @@ function App() {
             break;
           case 6:
             // transition 6-5
-            if (!testResponseTracker.replaceAll(/\s/g, "") == "AD0") {
-              socket.send("INTEGRATION_TEST_SCENARIO_4 Failed In Transition 6-5");
+            if (testResponseTracker.replaceAll(/\s/g, "") != "AD0") {
+              socket.send(
+                "INTEGRATION_TEST_SCENARIO_4 Failed In Transition 6-5"
+              );
             }
-            break;
-          case 7:
-            // transition 5-1
-            if (testResponseTracker.replaceAll(/\s/g, "") == "AR") {
-              socket.send("INTEGRATION_TEST_SCENARIO_4 Passed In Handling Watchdog");
-            } else {
-              socket.send("INTEGRATION_TEST_SCENARIO_4 Failed In Handling Watchdog");
-            }
+            setTimeout(() => {
+              if (testResponseTracker.replaceAll(/\s/g, "") == "AW") {
+                socket.send(
+                  "INTEGRATION_TEST_SCENARIO_4 Passed In Handling Watchdog"
+                );
+                socket.send("INTEGRATION_TEST_SCENARIO_4 Passes");
+                socket.send("All integration tests passed!");
+              } else {
+                socket.send(
+                  "INTEGRATION_TEST_SCENARIO_4 Failed In Handling Watchdog"
+                );
+              }
+            }, 17500);
             break;
           default:
             // error case
             socket.send(
-              "INTEGRATION_TEST_SCENARIO_1 Fails Due To Not Following Message Protocol"
+              "INTEGRATION_TEST_SCENARIO_4 Fails Due To Not Following Message Protocol"
             );
         }
         break;

@@ -107,7 +107,7 @@ function readFromWebSocket(data) {
     }, 5000);
   }
   // any integration test related updates/messages
-  if (String(data)[0] === "I") {
+  if (String(data)[0] === "A" || String(data)[0] === "I") {
     console.log("INTEGRATION TESTING UPDATE: " + data);
   }
 }

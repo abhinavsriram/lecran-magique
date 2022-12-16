@@ -22,13 +22,13 @@ void setup() {
 void loop() {
   // comment out this entire block of code when testing
   // read in messages received via Serial
-//  msg = "";
-//  while (Serial.available()) {
-//   msg += char(Serial.read());
-//  }
-//  // pass those messages as input to FSM
-//  CURRENT_STATE = updateFSM(CURRENT_STATE, msg);
-//  delay(10);
+  msg = "";
+  while (Serial.available()) {
+   msg += char(Serial.read());
+  }
+  // pass those messages as input to FSM
+  CURRENT_STATE = updateFSM(CURRENT_STATE, msg);
+  delay(10);
 }
 
 state updateFSM(state curState, String msg){
@@ -36,8 +36,6 @@ state updateFSM(state curState, String msg){
   state nextState = curState;
   // mock function that does nothing unless UNIT_TESTING is enabled
   testing_state_edit();
-//  Serial.println("CURRENT_STATE within FSM: " + String(curState));
-//  Serial.println("MESSAGE within FSM: " + String(msg));
   switch(curState) {
     case sWAITING:
       // check the guard
@@ -91,6 +89,7 @@ state updateFSM(state curState, String msg){
         updateProgressBar();
         // transition to next state
         nextState = sWAITING;
+        // check the guard
       } else if (cursorX == latestX && cursorY == latestY && totalLinesProcessed != totalLinesToDraw) { // transition 5-6
         // set the output
         int xCoord = lineInstructionsBuffer[readPointer].xCoord;
@@ -106,6 +105,7 @@ state updateFSM(state curState, String msg){
       }
       break;
     case sREQ_INSTR:
+      // check the guard
       if (msg.charAt(0) == 'S' && msg.charAt(1) == 'L') { // transition 6-5
         // set the output
         Serial.println("AD " + String(totalLinesProcessed));
