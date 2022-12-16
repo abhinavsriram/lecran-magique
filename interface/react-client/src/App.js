@@ -100,12 +100,205 @@ function App() {
             break;
           case 7:
             // transition 5-1
-            if (testResponseTracker.replaceAll(/\s/g, "") === "AD1") {
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AD1") {
               socket.send("INTEGRATION_TEST_SCENARIO_1 Passes");
             } else {
-              socket.send(
-                "INTEGRATION_TEST_SCENARIO_1 Failed In Transition 5-1"
-              );
+              socket.send("INTEGRATION_TEST_SCENARIO_1 Failed In Transition 5-1");
+            }
+            break;
+        }
+        break;
+      // testing Scenario 2 from the Sequence Diagrams
+      case "INTEGRATION_TEST_SCENARIO_2":
+        switch (parseInt(message)) {
+          case 1:
+            // transition 1-2
+            socket.send("SR");
+            break;
+          case 2:
+            // transition 2-3
+            socket.send("");
+            break;
+          case 3:
+            // transition 3-4
+            if (testResponseTracker === "AR") {
+              socket.send("SD 2");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 3-4");
+            }
+            break;
+          case 4:
+            // transition 4-5
+            socket.send("SF 0 0");
+            break;
+          case 5:
+            // transition 5-6
+            socket.send("");
+            break;
+          case 6:
+            // transition 6-5
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AD0") {
+              socket.send("SL 1 1");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 6-5");
+            }
+            break;
+          case 7:
+            // transition 5-1
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AD1") {
+              socket.send("INTEGRATION_TEST_SCENARIO_2 Passes");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 5-1");
+            }
+            break;
+          case 8:
+            // transition 1-2
+            socket.send("SR");
+            break;
+          case 9:
+            // transition 2-3
+            socket.send("");
+            break;
+          case 10:
+            // transition 3-4
+            if (testResponseTracker === "AR") {
+              socket.send("SD 2");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 3-4");
+            }
+            break;
+          case 11:
+            // transition 4-5
+            socket.send("SF 0 0");
+            break;
+          case 12:
+            // transition 5-6
+            socket.send("");
+            break;
+          case 13:
+            // transition 6-5
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AD0") {
+              socket.send("SL 1 1");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 6-5");
+            }
+            break;
+          case 14:
+            // transition 5-1
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AD1") {
+              socket.send("INTEGRATION_TEST_SCENARIO_2 Passes");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_2 Failed In Transition 5-1");
+            }
+            break;
+        }
+        break;
+      case "INTEGRATION_TEST_SCENARIO_3":
+        switch (parseInt(message)) {
+          case 1:
+            // transition 1-2
+            socket.send("SR");
+            break;
+          case 2:
+            // transition 2-3
+            socket.send("");
+            break;
+          case 3:
+            // transition 3-4
+            if (testResponseTracker === "AR") {
+              socket.send("SD 2");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_3 Failed In Transition 3-4");
+            }
+            break;
+          case 4:
+            // transition 4-5
+            socket.send("SF 0 0");
+            break;
+          case 5:
+            // transition 5-6
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AR") {
+              socket.send("INTEGRATION_TEST_SCENARIO_3 Passed In Handling ISR");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_3 Failed In Handling ISR");
+            }
+            break;
+          case 6:
+            // transition 1-2
+            socket.send("SR");
+            break;
+          case 7:
+            // transition 2-3
+            socket.send("");
+            break;
+          case 8:
+            // transition 3-4
+            if (testResponseTracker === "AR") {
+              socket.send("SD 2");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_3 Failed In Transition 3-4");
+            }
+            break;
+          case 9:
+            // transition 4-5
+            socket.send("SF 0 0");
+            break;
+          case 10:
+            // transition 6-5
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AD0") {
+              socket.send("SL 1 1");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_3 Failed In Transition 6-5");
+            }
+            break;
+          case 11:
+            // transition 5-1
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AD1") {
+              socket.send("INTEGRATION_TEST_SCENARIO_3 Passes");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_3 Failed In Transition 5-1");
+            }
+            break;
+        }
+        break;
+      case "INTEGRATION_TEST_SCENARIO_4":
+        switch (parseInt(message)) {
+          case 1:
+            // transition 1-2
+            socket.send("SR");
+            break;
+          case 2:
+            // transition 2-3
+            socket.send("");
+            break;
+          case 3:
+            // transition 3-4
+            if (testResponseTracker === "AR") {
+              socket.send("SD 2");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_4 Failed In Transition 3-4");
+            }
+            break;
+          case 4:
+            // transition 4-5
+            socket.send("SF 0 0");
+            break;
+          case 5:
+            // transition 5-6
+            socket.send("");
+            break;
+          case 6:
+            // transition 6-5
+            if (!testResponseTracker.replaceAll(/\s/g, "") == "AD0") {
+              socket.send("INTEGRATION_TEST_SCENARIO_4 Failed In Transition 6-5");
+            }
+            break;
+          case 7:
+            // transition 5-1
+            if (testResponseTracker.replaceAll(/\s/g, "") == "AR") {
+              socket.send("INTEGRATION_TEST_SCENARIO_4 Passed In Handling Watchdog");
+            } else {
+              socket.send("INTEGRATION_TEST_SCENARIO_4 Failed In Handling Watchdog");
             }
             break;
           default:
